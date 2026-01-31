@@ -1,26 +1,34 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-
-interface Event {
-  id: string;
-  title: string;
-  date: string;
-  location: string;
-}
+import { DatePicker } from '../../components/DatePicker';
+import { LocationPicker } from '../../components/LocationPicker';
+import { TagSelector } from '../../components/TagSelector';
+import { TimePicker, timeStringToMinutes } from '../../components/TimePicker';
+import Toast from '../../components/Toast';
+import { Event, EventLocation, useEvents } from '../../context/EventContext';
 
 export default function ManageEventsScreen() {
+  const { events, addEvent, deleteEvent } = useEvents();
   const [screen, setScreen] = useState<'home' | 'login' | 'signup' | 'events'>('home');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [coordinatorName, setCoordinatorName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [organizerName, setOrganizerName] = useState('');
-  const [events, setEvents] = useState<Event[]>([]);
-  const [eventTitle, setEventTitle] = useState('');
-  const [eventDate, setEventDate] = useState('');
-  const [eventLocation, setEventLocation] = useState('');
   const [showAddEvent, setShowAddEvent] = useState(false);
+
+  // Event form state
+  const [eventTitle, setEventTitle] = useState('');
+  const [isMultiDay, setIsMultiDay] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [eventLocation, setEventLocation] = useState<EventLocation | undefined>();
+  const [eventTags, setEventTags] = useState<string[]>([]);
+  const [eventDescription, setEventDescription] = useState('');
+  const [startTime, setStartTime] = useState<string | undefined>();
+  const [endTime, setEndTime] = useState<string | undefined>();
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
 
   // Login handler
   const handleLogin = () => {
@@ -47,30 +55,76 @@ export default function ManageEventsScreen() {
 
   // Add event handler
   const handleAddEvent = () => {
-    if (eventTitle && eventDate && eventLocation) {
-      setEvents([
-        ...events,
-        {
+    if (eventTitle && startDate && eventLocation && eventTags.length >= 3 && eventDescription) {
+        // Validate end date/time
+        if (isMultiDay && endDate) {
+          const s = new Date(startDate);
+          const e = new Date(endDate);
+          if (e < s) return; // invalid
+        }
+        if (!isMultiDay && endDate) {
+          // if user provided endDate on single-day flow, ensure it's the same or after
+          const s = new Date(startDate);
+          const e = new Date(endDate);
+          if (e < s) return;
+        }
+
+        // if same day, ensure endTime >= startTime
+        if (startDate && endDate && startDate === endDate && startTime && endTime) {
+          const sMin = timeStringToMinutes(startTime);
+          const eMin = timeStringToMinutes(endTime);
+          if (!isNaN(sMin) && !isNaN(eMin) && eMin < sMin) return;
+        }
+
+        const newEvent: Event = {
           id: Date.now().toString(),
           title: eventTitle,
-          date: eventDate,
+          startDate: startDate,
+          endDate: isMultiDay ? endDate || startDate : endDate || startDate,
           location: eventLocation,
-        },
-      ]);
+          tags: eventTags,
+          description: eventDescription,
+          startTime: startTime,
+          endTime: endTime,
+          creatorId: coordinatorName,
+        };
+      addEvent(newEvent);
+      
+      // Reset form
       setEventTitle('');
-      setEventDate('');
-      setEventLocation('');
+      setIsMultiDay(false);
+      setStartDate('');
+      setEndDate('');
+      setEventLocation(undefined);
+      setEventTags([]);
+      setEventDescription('');
+      setStartTime(undefined);
+      setEndTime(undefined);
       setShowAddEvent(false);
     }
+  };
+
+  // Delete event handler
+  const handleDeleteEvent = (id: string) => {
+    deleteEvent(id);
   };
 
   // Logout handler
   const handleLogout = () => {
     setIsLoggedIn(false);
     setCoordinatorName('');
-    setEvents([]);
     setScreen('home');
   };
+
+  // Validation check
+  const isEventFormValid =
+    eventTitle.trim() &&
+    startDate &&
+    eventLocation &&
+    eventTags.length >= 3 &&
+    eventDescription.trim() &&
+    // time validation: if both times provided and same-day ensure end >= start
+    (!startTime || !endTime || (startTime && endTime && (timeStringToMinutes(endTime) >= timeStringToMinutes(startTime))));
 
   // Render My Events screen
   if (isLoggedIn) {
@@ -82,64 +136,166 @@ export default function ManageEventsScreen() {
             <Text style={styles.headerSubtitle}>{coordinatorName}</Text>
           </View>
           <TouchableOpacity style={styles.addButton} onPress={() => setShowAddEvent(!showAddEvent)}>
-            <Ionicons name="add" size={24} color="#fff" />
+            <Ionicons name={showAddEvent ? 'close' : 'add'} size={24} color="#fff" />
           </TouchableOpacity>
         </View>
 
         {showAddEvent && (
-          <View style={styles.formSection}>
+          <ScrollView style={styles.formSection} showsVerticalScrollIndicator={false}>
             <Text style={styles.formTitle}>Create New Event</Text>
+            
+            <Text style={styles.label}>Event Title <Text style={styles.required}>*</Text></Text>
             <TextInput
               style={styles.input}
-              placeholder="Event Title"
+              placeholder="e.g., Carnival 2025"
               value={eventTitle}
               onChangeText={setEventTitle}
+              placeholderTextColor="#999"
             />
+
+            <Text style={styles.label}>Start Date <Text style={styles.required}>*</Text></Text>
+            <DatePicker
+              selectedDate={startDate}
+              onDateChange={setStartDate}
+            />
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 8 }}>
+              <TouchableOpacity onPress={() => setIsMultiDay((v) => !v)} style={{ padding: 8 }}>
+                <Ionicons name={isMultiDay ? 'square' : 'square-outline'} size={20} color="#007AFF" />
+              </TouchableOpacity>
+              <Text style={{ color: '#666' }}>Multi-day event</Text>
+            </View>
+
+            {isMultiDay && (
+              <>
+                <Text style={styles.label}>End Date <Text style={styles.required}>*</Text></Text>
+                <DatePicker selectedDate={endDate} onDateChange={setEndDate} />
+              </>
+            )}
+
+            <Text style={[styles.label, { marginTop: 6 }]}>Start Time</Text>
+            <TimePicker selectedTime={startTime} onTimeChange={(t) => setStartTime(t)} />
+
+              <Text style={[styles.label, { marginTop: 6 }]}>End Time</Text>
+            <TimePicker selectedTime={endTime} onTimeChange={(t) => setEndTime(t)} />
+
+            <Text style={styles.label}>Location <Text style={styles.required}>*</Text></Text>
+            <LocationPicker
+              selectedLocation={eventLocation}
+              onSelectLocation={setEventLocation}
+            />
+
+            <Text style={styles.label}>Tags <Text style={styles.required}>*</Text></Text>
+            <TagSelector
+              selectedTags={eventTags}
+              onTagsChange={setEventTags}
+              minTags={3}
+            />
+
+            <Text style={styles.label}>Description <Text style={styles.required}>*</Text></Text>
             <TextInput
-              style={styles.input}
-              placeholder="Date (e.g., Feb 15, 2025)"
-              value={eventDate}
-              onChangeText={setEventDate}
+              style={[styles.input, styles.descriptionInput]}
+              placeholder="Describe your event. Include details like cost (free, paid, etc.), ticket information, and registration links."
+              value={eventDescription}
+              onChangeText={setEventDescription}
+              multiline
+              numberOfLines={4}
+              placeholderTextColor="#999"
             />
-            <TextInput
-              style={styles.input}
-              placeholder="Location"
-              value={eventLocation}
-              onChangeText={setEventLocation}
-            />
+            <Text style={styles.descriptionHint}>
+              💡 Include info about: admission cost, ticket details, registration requirements, and links to book or register.
+            </Text>
+
             <View style={styles.formButtonContainer}>
               <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowAddEvent(false)}>
                 <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.createBtn} onPress={handleAddEvent}>
-                <Text style={styles.createBtnText}>Create</Text>
+              <TouchableOpacity
+                style={[styles.createBtn, !isEventFormValid && styles.disabledBtn]}
+                onPress={() => {
+                  if (!isEventFormValid) {
+                    const missing: string[] = [];
+                    if (!eventTitle.trim()) missing.push('Title');
+                    if (!startDate) missing.push('Start date');
+                    if (!eventLocation) missing.push('Location');
+                    if (eventTags.length < 3) {
+                      const need = 3 - eventTags.length;
+                      missing.push(need > 0 ? `Select ${need} more tag${need > 1 ? 's' : ''}` : 'Select at least 3 tags');
+                    }
+                    if (!eventDescription.trim()) missing.push('Description');
+                    if (isMultiDay && endDate) {
+                      const s = new Date(startDate);
+                      const e = new Date(endDate);
+                      if (e < s) missing.push('End date cannot be before start date');
+                    }
+                    if (startDate && endDate && startDate === endDate && startTime && endTime) {
+                      const sMin = timeStringToMinutes(startTime);
+                      const eMin = timeStringToMinutes(endTime);
+                      if (!isNaN(sMin) && !isNaN(eMin) && eMin < sMin) missing.push('End time cannot be before start time');
+                    }
+
+                    const msg = missing.length > 0 ? `Missing from event details: ${missing.join(', ')}` : 'One or more fields are incomplete';
+                    setToastMsg(msg);
+                    return;
+                  }
+                  handleAddEvent();
+                }}
+              >
+                <Text style={styles.createBtnText}>Create Event</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </ScrollView>
         )}
 
-        {events.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="calendar-outline" size={48} color="#ccc" />
-            <Text style={styles.emptyText}>No events yet</Text>
-            <Text style={styles.emptySubtext}>Create your first event to get started</Text>
-          </View>
-        ) : (
-          <ScrollView style={styles.eventsList}>
-            {events.map((event) => (
-              <View key={event.id} style={styles.eventCard}>
-                <Text style={styles.eventCardTitle}>{event.title}</Text>
-                <View style={styles.eventCardDetail}>
-                  <Ionicons name="calendar" size={14} color="#666" />
-                  <Text style={styles.eventCardText}>{event.date}</Text>
-                </View>
-                <View style={styles.eventCardDetail}>
-                  <Ionicons name="location" size={14} color="#666" />
-                  <Text style={styles.eventCardText}>{event.location}</Text>
-                </View>
+        <Toast message={toastMsg || ''} visible={!!toastMsg} onDismiss={() => setToastMsg(null)} />
+
+        {!showAddEvent && (
+          <>
+            {events.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Ionicons name="calendar-outline" size={48} color="#ccc" />
+                <Text style={styles.emptyText}>No events yet</Text>
+                <Text style={styles.emptySubtext}>Create your first event to get started</Text>
               </View>
-            ))}
-          </ScrollView>
+            ) : (
+              <ScrollView style={styles.eventsList} showsVerticalScrollIndicator={false}>
+                {events.map((event) => (
+                  <View key={event.id} style={styles.eventCard}>
+                    <View style={styles.eventCardHeader}>
+                      <Text style={styles.eventCardTitle}>{event.title}</Text>
+                      <TouchableOpacity onPress={() => handleDeleteEvent(event.id)}>
+                        <Ionicons name="trash" size={18} color="#ff3b30" />
+                      </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.eventCardDetail}>
+                      <Ionicons name="calendar" size={14} color="#666" />
+                      <Text style={styles.eventCardText}>
+                        {event.startDate}{event.endDate && event.endDate !== event.startDate ? ` — ${event.endDate}` : ''}
+                        {event.startTime ? ` • ${event.startTime}` : ''}{event.endTime ? ` — ${event.endTime}` : ''}
+                      </Text>
+                    </View>
+
+                    <View style={styles.eventCardDetail}>
+                      <Ionicons name="location" size={14} color="#666" />
+                      <Text style={styles.eventCardText}>{event.location.name}</Text>
+                    </View>
+
+                    <View style={styles.tagsContainer}>
+                      {event.tags.map((tag) => (
+                        <View key={tag} style={styles.eventTag}>
+                          <Text style={styles.eventTagText}>{tag}</Text>
+                        </View>
+                      ))}
+                    </View>
+
+                    <Text style={styles.eventDescription}>{event.description}</Text>
+                  </View>
+                ))}
+                <View style={{ height: 20 }} />
+              </ScrollView>
+            )}
+          </>
         )}
 
         <View style={styles.footer}>
@@ -185,7 +341,7 @@ export default function ManageEventsScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => setScreen('signup')}>
-            <Text style={styles.switchAuthLink}>Don't have an account? Sign up</Text>
+            <Text style={styles.switchAuthLink}>Don&apos;t have an account? Sign up</Text>
           </TouchableOpacity>
         </ScrollView>
       </View>
@@ -377,24 +533,48 @@ const styles = StyleSheet.create({
     padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
+    flex: 1,
   },
   formTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 15,
+    marginBottom: 20,
+    color: '#333',
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+    marginTop: 12,
+  },
+  required: {
+    color: '#ff3b30',
   },
   input: {
     borderWidth: 1,
     borderColor: '#ddd',
     padding: 12,
-    marginBottom: 12,
     borderRadius: 8,
     fontSize: 16,
+    backgroundColor: '#fff',
+  },
+  descriptionInput: {
+    textAlignVertical: 'top',
+    minHeight: 100,
+  },
+  descriptionHint: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 6,
+    marginBottom: 12,
+    fontStyle: 'italic',
   },
   formButtonContainer: {
     flexDirection: 'row',
     gap: 10,
-    marginTop: 15,
+    marginTop: 20,
+    marginBottom: 20,
   },
   cancelBtn: {
     flex: 1,
@@ -416,6 +596,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#007AFF',
     alignItems: 'center',
   },
+  disabledBtn: {
+    backgroundColor: '#ccc',
+    opacity: 0.6,
+  },
   createBtnText: {
     color: '#fff',
     fontSize: 16,
@@ -436,10 +620,17 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  eventCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
   eventCardTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 10,
+    flex: 1,
+    color: '#333',
   },
   eventCardDetail: {
     flexDirection: 'row',
@@ -450,6 +641,29 @@ const styles = StyleSheet.create({
   eventCardText: {
     fontSize: 14,
     color: '#666',
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginVertical: 10,
+  },
+  eventTag: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+  },
+  eventTagText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  eventDescription: {
+    fontSize: 13,
+    color: '#555',
+    lineHeight: 18,
+    marginTop: 10,
   },
   emptyState: {
     flex: 1,

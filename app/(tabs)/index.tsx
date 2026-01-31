@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import MapView from "react-native-maps";
 
-// TEMP
 const CLEAN_MAP_STYLE = [
   {
     featureType: "poi",

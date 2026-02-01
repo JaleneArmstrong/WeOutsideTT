@@ -9,16 +9,18 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  useColorScheme,
 } from "react-native";
 
 interface TimePickerProps {
   selectedTime?: string;
   onTimeChange: (time: string) => void;
   label?: string;
+  style?: any;
 }
 
 function formatTime(h: number, m: number, ampm: "AM" | "PM") {
-  const hh = h.toString().padStart(1, "0");
+  const hh = h.toString();
   const mm = m.toString().padStart(2, "0");
   return `${hh}:${mm} ${ampm}`;
 }
@@ -27,6 +29,7 @@ export function TimePicker({
   selectedTime,
   onTimeChange,
   label,
+  style,
 }: TimePickerProps) {
   const [show, setShow] = useState(false);
   const [hour, setHour] = useState<number>(12);
@@ -34,6 +37,15 @@ export function TimePicker({
   const [ampm, setAmpm] = useState<"AM" | "PM">("PM");
   const [hourInput, setHourInput] = useState<string>("12");
   const [minuteInput, setMinuteInput] = useState<string>("00");
+
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const textColor = isDark ? "#FFFFFF" : "#333333";
+  const subTextColor = isDark ? "#AAAAAA" : "#666666";
+  const surfaceColor = isDark ? "#1A1A1A" : "#FFFFFF";
+  const borderColor = isDark ? "#333333" : "#DDDDDD";
+  const inputBg = isDark ? "#252525" : "#F0F8FF";
+  const brandColor = "#D90429";
 
   useEffect(() => {
     if (selectedTime) {
@@ -59,19 +71,30 @@ export function TimePicker({
 
   return (
     <View style={styles.container}>
-      {label ? <Text style={styles.label}>{label}</Text> : null}
-      <TouchableOpacity style={styles.input} onPress={() => setShow(!show)}>
+      {label ? (
+        <Text style={[styles.label, { color: textColor }]}>{label}</Text>
+      ) : null}
+      <TouchableOpacity
+        style={[
+          styles.input,
+          { backgroundColor: surfaceColor, borderColor: borderColor },
+          style,
+        ]}
+        onPress={() => setShow(!show)}
+      >
         <Ionicons
           name="time"
           size={16}
-          color="#666"
+          color={subTextColor}
           style={{ marginRight: 8 }}
         />
-        <Text style={styles.inputText}>{selectedTime || "Select time"}</Text>
+        <Text style={[styles.inputText, { color: textColor }]}>
+          {selectedTime || "Select time"}
+        </Text>
         <Ionicons
           name={show ? "chevron-up" : "chevron-down"}
           size={16}
-          color="#666"
+          color={subTextColor}
         />
       </TouchableOpacity>
 
@@ -84,13 +107,27 @@ export function TimePicker({
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={styles.pickerScroll}
           >
-            <View style={styles.picker}>
+            <View
+              style={[
+                styles.picker,
+                { backgroundColor: surfaceColor, borderColor: borderColor },
+              ]}
+            >
               <View style={styles.row}>
                 <View style={styles.segment}>
-                  <Text style={styles.segLabel}>Hour</Text>
+                  <Text style={[styles.segLabel, { color: subTextColor }]}>
+                    Hour
+                  </Text>
                   <View style={styles.inputGroup}>
                     <TextInput
-                      style={styles.timeInput}
+                      style={[
+                        styles.timeInput,
+                        {
+                          backgroundColor: inputBg,
+                          color: textColor,
+                          borderColor: brandColor,
+                        },
+                      ]}
                       value={hourInput}
                       onChangeText={(val) => {
                         setHourInput(val);
@@ -98,6 +135,7 @@ export function TimePicker({
                         if (!isNaN(h) && h >= 1 && h <= 12) setHour(h);
                       }}
                       placeholder="HH"
+                      placeholderTextColor={subTextColor}
                       keyboardType="number-pad"
                       maxLength={2}
                     />
@@ -110,7 +148,11 @@ export function TimePicker({
                         setHourInput(nh.toString());
                       }}
                     >
-                      <Ionicons name="chevron-up" size={16} color="#007AFF" />
+                      <Ionicons
+                        name="chevron-up"
+                        size={16}
+                        color={brandColor}
+                      />
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={() => {
@@ -119,16 +161,28 @@ export function TimePicker({
                         setHourInput(nh.toString());
                       }}
                     >
-                      <Ionicons name="chevron-down" size={16} color="#007AFF" />
+                      <Ionicons
+                        name="chevron-down"
+                        size={16}
+                        color={brandColor}
+                      />
                     </TouchableOpacity>
                   </View>
                 </View>
-
                 <View style={styles.segment}>
-                  <Text style={styles.segLabel}>Minute</Text>
+                  <Text style={[styles.segLabel, { color: subTextColor }]}>
+                    Minute
+                  </Text>
                   <View style={styles.inputGroup}>
                     <TextInput
-                      style={styles.timeInput}
+                      style={[
+                        styles.timeInput,
+                        {
+                          backgroundColor: inputBg,
+                          color: textColor,
+                          borderColor: brandColor,
+                        },
+                      ]}
                       value={minuteInput}
                       onChangeText={(val) => {
                         setMinuteInput(val);
@@ -136,6 +190,7 @@ export function TimePicker({
                         if (!isNaN(m) && m >= 0 && m <= 59) setMinute(m);
                       }}
                       placeholder="MM"
+                      placeholderTextColor={subTextColor}
                       keyboardType="number-pad"
                       maxLength={2}
                     />
@@ -148,7 +203,11 @@ export function TimePicker({
                         setMinuteInput(nm.toString().padStart(2, "0"));
                       }}
                     >
-                      <Ionicons name="chevron-up" size={16} color="#007AFF" />
+                      <Ionicons
+                        name="chevron-up"
+                        size={16}
+                        color={brandColor}
+                      />
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={() => {
@@ -157,19 +216,28 @@ export function TimePicker({
                         setMinuteInput(nm.toString().padStart(2, "0"));
                       }}
                     >
-                      <Ionicons name="chevron-down" size={16} color="#007AFF" />
+                      <Ionicons
+                        name="chevron-down"
+                        size={16}
+                        color={brandColor}
+                      />
                     </TouchableOpacity>
                   </View>
                 </View>
-
                 <View style={styles.segment}>
-                  <Text style={styles.segLabel}>AM/PM</Text>
+                  <Text style={[styles.segLabel, { color: subTextColor }]}>
+                    AM/PM
+                  </Text>
                   <View style={styles.ampmControls}>
                     <TouchableOpacity onPress={() => setAmpm("AM")}>
                       <Text
                         style={[
                           styles.ampm,
-                          ampm === "AM" && styles.ampmActive,
+                          { color: subTextColor },
+                          ampm === "AM" && {
+                            color: brandColor,
+                            fontWeight: "700",
+                          },
                         ]}
                       >
                         AM
@@ -179,7 +247,11 @@ export function TimePicker({
                       <Text
                         style={[
                           styles.ampm,
-                          ampm === "PM" && styles.ampmActive,
+                          { color: subTextColor },
+                          ampm === "PM" && {
+                            color: brandColor,
+                            fontWeight: "700",
+                          },
                         ]}
                       >
                         PM
@@ -189,8 +261,13 @@ export function TimePicker({
                 </View>
               </View>
 
-              <View style={styles.pickerFooter}>
-                <TouchableOpacity style={styles.doneBtn} onPress={onDone}>
+              <View
+                style={[styles.pickerFooter, { borderTopColor: borderColor }]}
+              >
+                <TouchableOpacity
+                  style={[styles.doneBtn, { backgroundColor: brandColor }]}
+                  onPress={onDone}
+                >
                   <Text style={styles.doneText}>Done</Text>
                 </TouchableOpacity>
               </View>
@@ -204,57 +281,72 @@ export function TimePicker({
 
 const styles = StyleSheet.create({
   container: { marginBottom: 12 },
-  label: { fontSize: 14, fontWeight: "600", color: "#333", marginBottom: 8 },
+  label: {
+    fontSize: 13,
+    fontWeight: "700",
+    marginBottom: 8,
+    textTransform: "uppercase",
+  },
   input: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ddd",
+    borderWidth: 1.5,
     padding: 12,
-    borderRadius: 8,
-    backgroundColor: "#fff",
+    borderRadius: 12,
     justifyContent: "space-between",
   },
-  inputText: { flex: 1, fontSize: 16, color: "#333" },
+  inputText: { flex: 1, fontSize: 16 },
   picker: {
-    backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: "#ddd",
     borderRadius: 8,
     padding: 12,
     marginTop: 8,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   row: { flexDirection: "row", justifyContent: "space-between" },
   segment: { alignItems: "center", flex: 1 },
-  segLabel: { fontSize: 12, color: "#666", marginBottom: 6 },
+  segLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    marginBottom: 6,
+    textTransform: "uppercase",
+  },
   inputGroup: { alignItems: "center", marginBottom: 8 },
   timeInput: {
-    width: 50,
-    borderWidth: 1,
-    borderColor: "#007AFF",
-    borderRadius: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 6,
-    fontSize: 16,
-    fontWeight: "600",
+    width: 55,
+    borderWidth: 1.5,
+    borderRadius: 8,
+    paddingVertical: 10,
+    fontSize: 18,
+    fontWeight: "700",
     textAlign: "center",
-    color: "#333",
-    backgroundColor: "#f0f8ff",
   },
-  spinControls: { alignItems: "center", gap: 2, rowGap: 2 },
+  spinControls: { alignItems: "center", gap: 4 },
   pickerWrapper: { width: "100%" },
   pickerScroll: { flexGrow: 1 },
-  ampmControls: { flexDirection: "column", gap: 8, alignItems: "center" },
-  ampm: { fontSize: 16, color: "#666", padding: 6 },
-  ampmActive: { color: "#007AFF", fontWeight: "700" },
-  pickerFooter: { marginTop: 12, alignItems: "center" },
-  doneBtn: {
-    backgroundColor: "#007AFF",
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+  ampmControls: {
+    flexDirection: "column",
+    gap: 12,
+    alignItems: "center",
+    marginTop: 5,
   },
-  doneText: { color: "#fff", fontWeight: "700" },
+  ampm: { fontSize: 16, padding: 4 },
+  pickerFooter: {
+    marginTop: 15,
+    alignItems: "center",
+    borderTopWidth: 1,
+    paddingTop: 12,
+  },
+  doneBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+    borderRadius: 10,
+  },
+  doneText: { color: "#fff", fontWeight: "800", textTransform: "uppercase" },
 });
 
 export function timeStringToMinutes(t: string) {

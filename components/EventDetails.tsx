@@ -4,6 +4,8 @@ import { ScrollView, Share, Text, TouchableOpacity, View } from "react-native";
 import { Colors } from "../constants/theme";
 import { getStyles } from "../styles/mapStyles";
 
+const BRAND_RED = "#D90429";
+
 interface EventDetailsProps {
   event: any;
   keyboardHeight?: number;
@@ -18,7 +20,7 @@ export default function EventDetails({
   const onShare = async () => {
     try {
       await Share.share({
-        message: `Check out the vibe at ${event.name} on the Outside app!`,
+        message: `Check out the vibe at ${event.name} on LimingMap!`,
       });
     } catch (error) {
       console.log(error);
@@ -34,24 +36,9 @@ export default function EventDetails({
         contentContainerStyle={{ paddingBottom: keyboardHeight + 40 }}
       >
         <View style={styles.heroImage}>
-          {/* TODO: Use real Image from Database: 
-              <Image source={{ uri: event.image }} style={StyleSheet.absoluteFill} /> 
-          */}
           <View style={{ position: "absolute", top: 15, right: 15 }}>
-            <View
-              style={[
-                styles.vibeBadge,
-                { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.vibeText,
-                  { fontSize: 12, textTransform: "uppercase" },
-                ]}
-              >
-                {event.vibe}
-              </Text>
+            <View style={styles.vibeBadge}>
+              <Text style={styles.vibeText}>{event.vibe}</Text>
             </View>
           </View>
         </View>
@@ -62,23 +49,43 @@ export default function EventDetails({
 
             <View style={styles.metaPillContainer}>
               <View style={styles.metaPill}>
-                <Ionicons name="location" size={14} color="#666" />
-                <Text style={styles.metaText}>{event.dist || "Nearby"}</Text>
+                <Ionicons name="calendar" size={14} color={BRAND_RED} />
+                <Text style={styles.metaText}>{event.fullDateDisplay}</Text>
               </View>
+            </View>
 
-              {event.status && (
-                <View style={styles.metaPill}>
-                  <Ionicons name="time" size={14} color="#666" />
-                  <Text style={styles.metaText}>{event.status}</Text>
-                </View>
-              )}
+            <View style={[styles.metaPillContainer, { marginTop: 8 }]}>
+              <View style={styles.metaPill}>
+                <Ionicons name="location" size={14} color={BRAND_RED} />
+                <Text style={styles.metaText}>{event.locationName}</Text>
+              </View>
             </View>
           </View>
         </View>
 
-        <Text style={styles.descriptionText}>
-          {event.description || "No description available for this lime yet."}
-        </Text>
+        <View style={styles.tagsRow}>
+          <View style={styles.tagsList}>
+            {event.tags &&
+              event.tags.map((tag: string) => (
+                <View key={tag} style={styles.tagBadge}>
+                  <Text style={styles.tagBadgeText}>#{tag.toUpperCase()}</Text>
+                </View>
+              ))}
+          </View>
+        </View>
+
+        <View style={{ marginTop: 20 }}>
+          <Text style={styles.descriptionLabel}>About this lime:</Text>
+          <Text style={styles.descriptionText}>
+            {event.description || "No description available for this lime yet."}
+          </Text>
+
+          {event.creator && (
+            <Text style={styles.creatorText}>
+              Organized by: {event.creator}
+            </Text>
+          )}
+        </View>
 
         <View style={styles.actionContainer}>
           <TouchableOpacity

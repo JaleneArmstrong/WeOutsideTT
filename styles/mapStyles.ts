@@ -4,6 +4,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export const COLLAPSED_HEIGHT = SCREEN_HEIGHT * 0.12;
 export const EXPANDED_HEIGHT = SCREEN_HEIGHT * 0.35;
+const BRAND_RED = "#D90429";
 
 export const getStyles = (theme: any) => {
   return StyleSheet.create({
@@ -81,136 +82,184 @@ export const getStyles = (theme: any) => {
       color: "#333",
     },
 
-    // =========================
     // EVENT DETAILS
-    // =========================
     heroImage: {
       width: "100%",
       height: 220,
       borderRadius: 24,
       backgroundColor: "#EEE",
       marginBottom: 20,
+      overflow: "hidden",
     },
     detailHeader: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "flex-start",
       marginBottom: 15,
+      paddingHorizontal: 25,
     },
     titleStack: {
       flex: 1,
     },
+
+    vibeBadge: {
+      backgroundColor: BRAND_RED,
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+    },
+
+    vibeText: {
+      fontSize: 11,
+      fontWeight: "900",
+      color: "#FFFFFF",
+      textTransform: "uppercase",
+    },
+
     mainTitle: {
       fontSize: 28,
       fontWeight: "900",
-      color: "#000",
+      color: "#000000",
       letterSpacing: -1,
     },
+
     metaPillContainer: {
       flexDirection: "row",
+      flexWrap: "wrap",
       gap: 8,
       marginTop: 10,
+      alignSelf: "flex-start",
+      marginLeft: -10,
     },
+
     metaPill: {
       flexDirection: "row",
       alignItems: "center",
-      backgroundColor: "#F5F5F5",
       paddingHorizontal: 12,
       paddingVertical: 6,
       borderRadius: 12,
     },
     metaText: {
       fontSize: 13,
-      fontWeight: "700",
-      color: "#666",
+      fontWeight: "400",
+      color: "#1A1A1A",
       marginLeft: 4,
     },
-    descriptionText: {
-      fontSize: 16,
-      lineHeight: 24,
-      color: "#444",
+
+    tagsRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 10,
       marginTop: 15,
-      fontWeight: "400",
+      paddingHorizontal: 25,
     },
+    tagsList: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      flex: 1,
+      gap: 6,
+    },
+    tagBadge: {
+      backgroundColor: "#FFF0F0",
+      paddingVertical: 4,
+      paddingHorizontal: 10,
+      borderRadius: 8,
+      borderWidth: 1.5,
+      borderColor: "#FFDADA",
+    },
+    tagBadgeText: {
+      fontSize: 11,
+      color: BRAND_RED,
+      fontWeight: "800",
+      textTransform: "uppercase",
+    },
+
+    descriptionLabel: {
+      fontSize: 13,
+      fontWeight: "900",
+      color: "#000000",
+      marginTop: 20,
+      textTransform: "uppercase",
+      paddingHorizontal: 25,
+    },
+    descriptionText: {
+      fontSize: 15,
+      lineHeight: 22,
+      color: "#1A1A1A",
+      marginTop: 8,
+      fontWeight: "400",
+      paddingHorizontal: 25,
+    },
+
+    creatorText: {
+      fontSize: 12,
+      color: "#666666",
+      fontStyle: "italic",
+      marginTop: 12,
+      paddingHorizontal: 25,
+    },
+
     actionContainer: {
       flexDirection: "row",
       gap: 12,
-      marginTop: 25,
+      marginTop: 30,
+      paddingHorizontal: 25,
     },
     primaryButton: {
       flex: 2,
-      backgroundColor: "#000",
+      backgroundColor: BRAND_RED,
       paddingVertical: 16,
       borderRadius: 18,
       alignItems: "center",
       justifyContent: "center",
       flexDirection: "row",
+      elevation: 4,
     },
     secondaryButton: {
       flex: 1,
-      backgroundColor: "#FFF",
+      backgroundColor: "#FFFFFF",
       borderWidth: 2,
-      borderColor: "#EEE",
+      borderColor: "#EEEEEE",
       paddingVertical: 16,
       borderRadius: 18,
       alignItems: "center",
       justifyContent: "center",
     },
-    eventItem: {
-      flexDirection: "row",
-      backgroundColor: "#fff",
-      borderRadius: 16,
-      padding: 12,
-      marginBottom: 12,
+
+    // MAP MARKERS & UI
+    marker: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: BRAND_RED,
       alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 3,
+      borderColor: "#fff",
       shadowColor: "#000",
-      shadowOpacity: 0.05,
-      shadowRadius: 10,
-      shadowOffset: { width: 0, height: 4 },
-      elevation: 3,
-      borderWidth: 1,
-      borderColor: "#F0F0F0",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3,
+      elevation: 5,
     },
-    eventImagePlaceholder: {
-      width: 50,
-      height: 50,
-      borderRadius: 8,
-      backgroundColor: "#E0E0E0",
+    eventCountBadge: {
+      position: "absolute",
+      top: 130,
+      right: 15,
+      backgroundColor: BRAND_RED,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderRadius: 15,
+      elevation: 5,
     },
-    eventInfo: {
-      marginLeft: 10,
-      flex: 1,
-    },
-    eventName: { fontSize: 14, fontWeight: "700", color: "#222" },
-    row: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginTop: 4,
-    },
-    eventDist: { fontSize: 12, color: "#555", marginRight: 8 },
-    vibeBadge: {
-      backgroundColor: "#FFF0F0",
-      borderRadius: 8,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderWidth: 1,
-      borderColor: "#FFEBEC",
-    },
-    vibeText: {
-      fontSize: 11,
+    eventCountText: {
+      color: "#fff",
+      fontSize: 12,
       fontWeight: "800",
-      color: "#CE1126",
       textTransform: "uppercase",
     },
-    eventDetails: {
-      fontSize: 12,
-      color: "#333",
-      lineHeight: 16,
-    },
 
-    // =========================
     // POPUP
-    // =========================
     popupBubble: {
       backgroundColor: "#ffffff",
       borderRadius: 24,

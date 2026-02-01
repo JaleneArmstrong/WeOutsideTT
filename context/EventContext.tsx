@@ -20,6 +20,7 @@ export interface EventLocation {
 export interface Event {
   id: string;
   title: string;
+  image?: string | null;
   startDate: string;
   endDate?: string;
   location: EventLocation;

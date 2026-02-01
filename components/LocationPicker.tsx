@@ -9,6 +9,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  useColorScheme,
 } from "react-native";
 import { searchLocations } from "../constants/locations";
 import { EventLocation } from "../context/EventContext";
@@ -16,6 +17,7 @@ import { EventLocation } from "../context/EventContext";
 interface LocationPickerProps {
   onSelectLocation: (location: EventLocation) => void;
   selectedLocation?: EventLocation;
+  style?: any;
 }
 
 export function LocationPicker({
@@ -26,6 +28,8 @@ export function LocationPicker({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const filteredLocations = searchQuery.trim()
     ? searchLocations(searchQuery)
@@ -125,15 +129,28 @@ export function LocationPicker({
 
   return (
     <View style={styles.container}>
-      <View style={styles.inputContainer}>
-        <Ionicons name="location" size={18} color="#666" style={styles.icon} />
+      <View
+        style={[
+          styles.inputContainer,
+          {
+            backgroundColor: isDark ? "#1A1A1A" : "#fff",
+            borderColor: isDark ? "#333" : "#ddd",
+          },
+        ]}
+      >
+        <Ionicons
+          name="location"
+          size={18}
+          color={isDark ? "#AAA" : "#666"}
+          style={styles.icon}
+        />
         <TextInput
-          style={styles.input}
+          style={[styles.input, { color: isDark ? "#fff" : "#333" }]}
           placeholder="Search location (e.g., Queens park savannah)"
           value={searchQuery}
           onChangeText={setSearchQuery}
           onFocus={() => setShowSuggestions(true)}
-          placeholderTextColor="#999"
+          placeholderTextColor={isDark ? "#666" : "#999"}
         />
         {searchQuery ? (
           <TouchableOpacity
@@ -142,7 +159,11 @@ export function LocationPicker({
               setShowSuggestions(false);
             }}
           >
-            <Ionicons name="close-circle" size={18} color="#999" />
+            <Ionicons
+              name="close-circle"
+              size={18}
+              color={isDark ? "#666" : "#999"}
+            />
           </TouchableOpacity>
         ) : null}
       </View>
@@ -150,21 +171,44 @@ export function LocationPicker({
       {selectedLocation && !showSuggestions && (
         <View style={styles.selectedLocation}>
           <Ionicons name="checkmark-circle" size={16} color="#34C759" />
-          <Text style={styles.selectedText}>{selectedLocation.name}</Text>
+          <Text style={[styles.selectedText, { color: "#34C759" }]}>
+            {selectedLocation.name}
+          </Text>
         </View>
       )}
 
       {showSuggestions &&
         (filteredLocations.length > 0 || nominatimResults.length > 0) && (
-          <View style={styles.suggestionsContainer}>
+          <View
+            style={[
+              styles.suggestionsContainer,
+              {
+                backgroundColor: isDark ? "#1A1A1A" : "#fff",
+                borderColor: isDark ? "#333" : "#ddd",
+              },
+            ]}
+          >
             <ScrollView
               style={styles.suggestionsScroll}
               keyboardShouldPersistTaps="handled"
             >
               {filteredLocations.length > 0 && (
                 <>
-                  <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionHeaderText}>
+                  <View
+                    style={[
+                      styles.sectionHeader,
+                      {
+                        backgroundColor: isDark ? "#252525" : "#f5f5f5",
+                        borderBottomColor: isDark ? "#333" : "#e0e0e0",
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.sectionHeaderText,
+                        { color: isDark ? "#AAA" : "#666" },
+                      ]}
+                    >
                       Popular Locations
                     </Text>
                   </View>
@@ -173,15 +217,30 @@ export function LocationPicker({
                       key={`local-${item.name}-${item.latitude}-${item.longitude}`}
                       style={[
                         styles.suggestionItem,
+                        { borderBottomColor: isDark ? "#222" : "#f0f0f0" },
                         selectedLocation?.name === item.name &&
-                          styles.selectedSuggestion,
+                          (isDark
+                            ? { backgroundColor: "#2D1B1E" }
+                            : styles.selectedSuggestion),
                       ]}
                       onPress={() => handleSelectLocation(item)}
                     >
                       <Ionicons name="star" size={14} color="#FFD700" />
                       <View style={styles.suggestionContent}>
-                        <Text style={styles.suggestionName}>{item.name}</Text>
-                        <Text style={styles.suggestionCoords}>
+                        <Text
+                          style={[
+                            styles.suggestionName,
+                            { color: isDark ? "#fff" : "#333" },
+                          ]}
+                        >
+                          {item.name}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.suggestionCoords,
+                            { color: isDark ? "#666" : "#999" },
+                          ]}
+                        >
                           {item.latitude.toFixed(4)}°,{" "}
                           {item.longitude.toFixed(4)}°
                         </Text>
@@ -192,8 +251,21 @@ export function LocationPicker({
               )}
               {nominatimResults.length > 0 && (
                 <>
-                  <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionHeaderText}>
+                  <View
+                    style={[
+                      styles.sectionHeader,
+                      {
+                        backgroundColor: isDark ? "#252525" : "#f5f5f5",
+                        borderBottomColor: isDark ? "#333" : "#e0e0e0",
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.sectionHeaderText,
+                        { color: isDark ? "#AAA" : "#666" },
+                      ]}
+                    >
                       All Locations (OpenStreetMap)
                     </Text>
                   </View>
@@ -202,15 +274,34 @@ export function LocationPicker({
                       key={`osm-${item.name}-${item.latitude}-${item.longitude}`}
                       style={[
                         styles.suggestionItem,
+                        { borderBottomColor: isDark ? "#222" : "#f0f0f0" },
                         selectedLocation?.name === item.name &&
-                          styles.selectedSuggestion,
+                          (isDark
+                            ? { backgroundColor: "#2D1B1E" }
+                            : styles.selectedSuggestion),
                       ]}
                       onPress={() => handleSelectLocation(item)}
                     >
-                      <Ionicons name="location" size={14} color="#007AFF" />
+                      <Ionicons
+                        name="location"
+                        size={14}
+                        color={isDark ? "#D90429" : "#007AFF"}
+                      />
                       <View style={styles.suggestionContent}>
-                        <Text style={styles.suggestionName}>{item.name}</Text>
-                        <Text style={styles.suggestionCoords}>
+                        <Text
+                          style={[
+                            styles.suggestionName,
+                            { color: isDark ? "#fff" : "#333" },
+                          ]}
+                        >
+                          {item.name}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.suggestionCoords,
+                            { color: isDark ? "#666" : "#999" },
+                          ]}
+                        >
                           {item.latitude.toFixed(4)}°,{" "}
                           {item.longitude.toFixed(4)}°
                         </Text>
@@ -221,8 +312,13 @@ export function LocationPicker({
               )}
               {nominatimLoading && (
                 <View style={{ padding: 8, alignItems: "center" }}>
-                  <ActivityIndicator />
-                  <Text style={styles.loadingText}>
+                  <ActivityIndicator color={isDark ? "#D90429" : "#007AFF"} />
+                  <Text
+                    style={[
+                      styles.loadingText,
+                      { color: isDark ? "#666" : "#999" },
+                    ]}
+                  >
                     Searching OpenStreetMap...
                   </Text>
                 </View>
@@ -234,16 +330,26 @@ export function LocationPicker({
           </View>
         )}
       {showSuggestions && searchQuery && filteredLocations.length === 0 && (
-        <View style={styles.noResults}>
+        <View
+          style={[
+            styles.noResults,
+            { backgroundColor: isDark ? "#252525" : "#f5f5f5" },
+          ]}
+        >
           {geocoding ? (
-            <ActivityIndicator />
+            <ActivityIndicator color={isDark ? "#D90429" : "#007AFF"} />
           ) : (
             <>
-              <Text style={styles.noResultsText}>
+              <Text
+                style={[
+                  styles.noResultsText,
+                  { color: isDark ? "#666" : "#999" },
+                ]}
+              >
                 No locations found in list
               </Text>
               <TouchableOpacity
-                style={styles.geocodeBtn}
+                style={[styles.geocodeBtn, { backgroundColor: "#D90429" }]}
                 onPress={handleGeocode}
               >
                 <Text style={styles.geocodeBtnText}>
@@ -269,10 +375,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#ddd",
     borderRadius: 8,
     paddingHorizontal: 12,
-    backgroundColor: "#fff",
   },
   icon: {
     marginRight: 8,
@@ -291,13 +395,10 @@ const styles = StyleSheet.create({
   },
   selectedText: {
     fontSize: 14,
-    color: "#34C759",
     fontWeight: "500",
   },
   suggestionsContainer: {
-    backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: "#ddd",
     borderRadius: 8,
     marginTop: 8,
     maxHeight: 300,
@@ -307,28 +408,23 @@ const styles = StyleSheet.create({
     maxHeight: 300,
   },
   sectionHeader: {
-    backgroundColor: "#f5f5f5",
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
   },
   sectionHeaderText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#666",
     textTransform: "uppercase",
   },
   loadingText: {
     fontSize: 12,
-    color: "#999",
     marginTop: 4,
   },
   suggestionItem: {
     flexDirection: "row",
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
     alignItems: "center",
     gap: 10,
   },
@@ -341,27 +437,22 @@ const styles = StyleSheet.create({
   suggestionName: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#333",
   },
   suggestionCoords: {
     fontSize: 12,
-    color: "#999",
     marginTop: 2,
   },
   noResults: {
-    backgroundColor: "#f5f5f5",
     borderRadius: 8,
     padding: 12,
     alignItems: "center",
     marginTop: 8,
   },
   noResultsText: {
-    color: "#999",
     fontSize: 14,
   },
   geocodeBtn: {
     marginTop: 10,
-    backgroundColor: "#007AFF",
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,

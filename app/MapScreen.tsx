@@ -1,58 +1,59 @@
 import EventDetails from "@/components/EventDetails";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
-  Keyboard,
   PanResponder,
+  TouchableOpacity,
   View,
 } from "react-native";
 import MapLayer, { EventType } from "../components/MapLayer";
 import SearchBar from "../components/SearchBar";
 import { Colors } from "../constants/theme";
+import { useEvents } from "../context/EventContext";
 import { EXPANDED_HEIGHT, getStyles } from "../styles/mapStyles";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 const COLLAPSED_HEIGHT = 0;
 const SEARCH_BAR_HEIGHT = 70;
 const MAX_DRAG_HEIGHT = SCREEN_HEIGHT - SEARCH_BAR_HEIGHT - 20;
-
-const EVENTS: EventType[] = [
-  {
-    id: 1,
-    name: "Paramin Parang",
-    dist: "1.2km",
-    vibe: "COOL DOWN",
-    coords: { lat: 10.73, lng: -61.55 },
-    status: "Open Now",
-    description:
-      "Experience the ultimate cool down in the hills of Paramin. Known for its chilly atmosphere and authentic parang music, this is the go-to spot for a relaxed Sunday lime.",
-  },
-  {
-    id: 2,
-    name: "Arima Market Lime",
-    dist: "5.0km",
-    vibe: "THE PUMP",
-    coords: { lat: 10.63, lng: -61.28 },
-    status: "Starting Soon",
-    description:
-      "The heart of the borough! Join the energy at the Arima Market. High-energy music, street food, and the best 'pump' you'll find in the East.",
-  },
-  {
-    id: 3,
-    name: "Maracas Bay Sunday",
-    dist: "12km",
-    vibe: "BELLY FULL",
-    coords: { lat: 10.76, lng: -61.44 },
-    status: "Busy",
-    description:
-      "No Sunday is complete without a Maracas run. Come for the Bake and Shark, stay for the sunset and the unmatched beach vibes.",
-  },
-];
+const BRAND_RED = "#D90429";
 
 export default function MapScreen() {
   const styles = getStyles(Colors.light);
+  const router = useRouter();
+  const { events } = useEvents();
+
+  const mapEvents: EventType[] = events.map((e) => {
+    const startDate = e.startDate || "Date TBD";
+    const endDate =
+      e.endDate && e.endDate !== e.startDate ? ` — ${e.endDate}` : "";
+    const startTime = e.startTime ? ` • ${e.startTime}` : "";
+    const endTime = e.endTime ? ` — ${e.endTime}` : "";
+
+    const dateStr = `${startDate}${endDate}${startTime}${endTime}`;
+
+    return {
+      id: Number(e.id) || Date.now(),
+      name: e.title || "Untitled Lime",
+      dist: "Nearby",
+      vibe: e.tags && e.tags[0] ? e.tags[0].toUpperCase() : "LIME",
+      coords: {
+        lat: e.location?.latitude || 10.65,
+        lng: e.location?.longitude || -61.5,
+      },
+      status: e.startTime ? `Starts ${e.startTime}` : "Open Now",
+      description: e.description || "No description provided.",
+      fullDateDisplay: dateStr,
+      locationName: e.location?.name || "Trinidad & Tobago",
+      tags: e.tags || [],
+      creator: e.creatorId || "Promoter",
+    };
+  });
+
   const [selectedEvent, setSelectedEvent] = useState<EventType | undefined>();
   const slideAnim = useRef(new Animated.Value(COLLAPSED_HEIGHT)).current;
   const slideValueRef = useRef(COLLAPSED_HEIGHT);
@@ -100,21 +101,12 @@ export default function MapScreen() {
     }),
   ).current;
 
-  useEffect(() => {
-    const showSub = Keyboard.addListener("keyboardDidShow", (e) => {});
-    const hideSub = Keyboard.addListener("keyboardDidHide", () => {});
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, []);
-
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
 
       <MapLayer
-        events={EVENTS}
+        events={mapEvents}
         selectedEvent={selectedEvent}
         onMapPress={() => {
           setSelectedEvent(undefined);
@@ -125,17 +117,54 @@ export default function MapScreen() {
           animateTo(EXPANDED_HEIGHT);
         }}
       />
+      <View
+        style={[
+          styles.floatingSearchContainer,
+          {
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            paddingHorizontal: 10,
+            width: "100%",
+            position: "absolute",
+            top: 60,
+          },
+        ]}
+      >
+        <View style={{ width: "75%" }}>
+          <SearchBar
+            isExpanded={false}
+            onFocus={() => {
+              setSelectedEvent(undefined);
+              animateTo(COLLAPSED_HEIGHT);
+            }}
+            onCancel={() => {
+              animateTo(COLLAPSED_HEIGHT);
+            }}
+          />
+        </View>
 
-      <View style={styles.floatingSearchContainer}>
-        <SearchBar
-          isExpanded={false}
-          onFocus={() => {
-            setSelectedEvent(undefined);
+        <TouchableOpacity
+          style={{
+            backgroundColor: "#FFF",
+            width: 48,
+            height: 48,
+            borderRadius: 12,
+            justifyContent: "center",
+            alignItems: "center",
+            borderWidth: 1.5,
+            borderColor: BRAND_RED,
+            elevation: 4,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 3,
           }}
-          onCancel={() => {
-            animateTo(COLLAPSED_HEIGHT);
-          }}
-        />
+          onPress={() => router.push("/PromoterDashboard")}
+        >
+          <Ionicons name="megaphone" size={22} color={BRAND_RED} />
+        </TouchableOpacity>
       </View>
 
       <Animated.View

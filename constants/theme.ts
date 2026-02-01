@@ -13,6 +13,7 @@ export const Colors = {
     doodleTint: "#000000",
     doodleOpacity: 0.12,
     cardBackground: "rgba(255,255,255,0.9)",
+    BRAND_RED: BRAND_RED,
   },
   dark: {
     text: "#ECEDEE",
@@ -24,6 +25,7 @@ export const Colors = {
     doodleTint: "#FFFFFF",
     doodleOpacity: 0.3,
     cardBackground: "rgba(0,0,0,0.85)",
+    BRAND_RED: BRAND_RED,
   },
 };
 

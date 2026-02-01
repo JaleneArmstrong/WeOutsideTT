@@ -29,9 +29,8 @@ export default function ManageEventsScreen() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [organizerName, setOrganizerName] = useState("");
   const [showAddEvent, setShowAddEvent] = useState(false);
-  const [pendingEmail, setPendingEmail] = useState(""); // Store email for verification screen
+  const [pendingEmail, setPendingEmail] = useState("");
 
-  // Event form state
   const [eventTitle, setEventTitle] = useState("");
   const [isMultiDay, setIsMultiDay] = useState(false);
   const [startDate, setStartDate] = useState("");
@@ -45,13 +44,11 @@ export default function ManageEventsScreen() {
   const [endTime, setEndTime] = useState<string | undefined>();
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
-  // Email validation helper
   const isValidEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  // Login handler
   const handleLogin = () => {
     if (!email || !password) {
       setToastMsg("Please fill in all fields");
@@ -61,7 +58,7 @@ export default function ManageEventsScreen() {
       setToastMsg("Please enter a valid email address");
       return;
     }
-    // In a real app, validate credentials against backend
+
     setCoordinatorName(email.split("@")[0]);
     setIsLoggedIn(true);
     setEmail("");
@@ -586,7 +583,6 @@ export default function ManageEventsScreen() {
     );
   }
 
-  // Render Verification screen
   if (screen === "verification") {
     return (
       <View style={styles.authContainer}>
@@ -759,7 +755,7 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 20,
   },
-  // Verification screen
+
   verificationContent: {
     alignItems: "center",
     paddingHorizontal: 20,
@@ -812,7 +808,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: "center",
   },
-  // My Events
+
   header: {
     flexDirection: "row",
     justifyContent: "space-between",

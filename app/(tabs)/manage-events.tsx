@@ -17,15 +17,21 @@ import { Event, EventLocation, useEvents } from "../../context/EventContext";
 
 export default function ManageEventsScreen() {
   const { events, addEvent, deleteEvent } = useEvents();
-  const [screen, setScreen] = useState<"home" | "login" | "signup" | "events">(
-    "home",
-  );
+  const [screen, setScreen] = useState<
+    "home" | "login" | "signup" | "verification" | "events"
+  >("home");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [coordinatorName, setCoordinatorName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [organizerName, setOrganizerName] = useState("");
   const [showAddEvent, setShowAddEvent] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState(""); // Store email for verification screen
+
+  // Event form state
   const [eventTitle, setEventTitle] = useState("");
   const [isMultiDay, setIsMultiDay] = useState(false);
   const [startDate, setStartDate] = useState("");
@@ -38,25 +44,58 @@ export default function ManageEventsScreen() {
   const [startTime, setStartTime] = useState<string | undefined>();
   const [endTime, setEndTime] = useState<string | undefined>();
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  // Email validation helper
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Login handler
   const handleLogin = () => {
-    if (email && password) {
-      setCoordinatorName(email.split("@")[0]);
-      setIsLoggedIn(true);
-      setEmail("");
-      setPassword("");
-      setScreen("events");
+    if (!email || !password) {
+      setToastMsg("Please fill in all fields");
+      return;
     }
+    if (!isValidEmail(email)) {
+      setToastMsg("Please enter a valid email address");
+      return;
+    }
+    // In a real app, validate credentials against backend
+    setCoordinatorName(email.split("@")[0]);
+    setIsLoggedIn(true);
+    setEmail("");
+    setPassword("");
+    setShowPassword(false);
+    setScreen("events");
   };
 
   const handleSignUp = () => {
-    if (organizerName && email && password) {
-      setCoordinatorName(organizerName);
-      setIsLoggedIn(true);
-      setOrganizerName("");
-      setEmail("");
-      setPassword("");
-      setScreen("events");
+    if (!organizerName || !email || !password || !confirmPassword) {
+      setToastMsg("Please fill in all fields");
+      return;
     }
+    if (!isValidEmail(email)) {
+      setToastMsg("Please enter a valid email address");
+      return;
+    }
+    if (password.length < 6) {
+      setToastMsg("Password must be at least 6 characters");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setToastMsg("Passwords do not match");
+      return;
+    }
+    setPendingEmail(email);
+    setCoordinatorName(organizerName);
+    setOrganizerName("");
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    setScreen("verification");
   };
 
   const handleAddEvent = () => {
@@ -420,13 +459,25 @@ export default function ManageEventsScreen() {
             onChangeText={setEmail}
           />
 
-          <TextInput
-            style={styles.authInput}
-            placeholder="Password"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Password"
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
+            />
+            <TouchableOpacity
+              style={styles.eyeIcon}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Ionicons
+                name={showPassword ? "eye-off" : "eye"}
+                size={20}
+                color="#999"
+              />
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity style={styles.authButton} onPress={handleLogin}>
             <Text style={styles.authButtonText}>Log In</Text>
@@ -438,6 +489,11 @@ export default function ManageEventsScreen() {
             </Text>
           </TouchableOpacity>
         </ScrollView>
+        <Toast
+          message={toastMsg || ""}
+          visible={!!toastMsg}
+          onDismiss={() => setToastMsg(null)}
+        />
       </View>
     );
   }
@@ -471,13 +527,45 @@ export default function ManageEventsScreen() {
             onChangeText={setEmail}
           />
 
-          <TextInput
-            style={styles.authInput}
-            placeholder="Password"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Password"
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
+            />
+            <TouchableOpacity
+              style={styles.eyeIcon}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Ionicons
+                name={showPassword ? "eye-off" : "eye"}
+                size={20}
+                color="#999"
+              />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Confirm Password"
+              secureTextEntry={!showConfirmPassword}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+            />
+            <TouchableOpacity
+              style={styles.eyeIcon}
+              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+            >
+              <Ionicons
+                name={showConfirmPassword ? "eye-off" : "eye"}
+                size={20}
+                color="#999"
+              />
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity style={styles.authButton} onPress={handleSignUp}>
             <Text style={styles.authButtonText}>Sign Up</Text>
@@ -488,6 +576,56 @@ export default function ManageEventsScreen() {
               Already have an account? Log in
             </Text>
           </TouchableOpacity>
+        </ScrollView>
+        <Toast
+          message={toastMsg || ""}
+          visible={!!toastMsg}
+          onDismiss={() => setToastMsg(null)}
+        />
+      </View>
+    );
+  }
+
+  // Render Verification screen
+  if (screen === "verification") {
+    return (
+      <View style={styles.authContainer}>
+        <ScrollView contentContainerStyle={styles.authScrollContent}>
+          <View style={styles.verificationContent}>
+            <View style={styles.verificationIconContainer}>
+              <Ionicons name="checkmark-circle" size={80} color="#34C759" />
+            </View>
+
+            <Text style={styles.verificationTitle}>Account Under Review</Text>
+            <Text style={styles.verificationMessage}>
+              Thank you for signing up! Your coordinator account is currently
+              being reviewed by our team.
+            </Text>
+            <Text style={styles.verificationMessage}>
+              We will notify you via email at{" "}
+              <Text style={styles.emailHighlight}>{pendingEmail}</Text>{" "}
+              regarding the status of your account.
+            </Text>
+
+            <View style={styles.verificationInfoBox}>
+              <Ionicons
+                name="information-circle-outline"
+                size={20}
+                color="#007AFF"
+              />
+              <Text style={styles.verificationInfoText}>
+                Note: You can't create events while your account is under
+                review.
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.verificationBackButton}
+              onPress={() => setScreen("home")}
+            >
+              <Text style={styles.verificationBackText}>Back to Home</Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </View>
     );
@@ -598,12 +736,83 @@ const styles = StyleSheet.create({
     color: "#007AFF",
     fontSize: 14,
   },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    paddingRight: 12,
+    backgroundColor: "#fff",
+    marginBottom: 15,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 12,
+    fontSize: 16,
+  },
+  eyeIcon: {
+    padding: 8,
+  },
   homeButtonContainer: {
     width: "100%",
     gap: 12,
     marginTop: 20,
   },
-
+  // Verification screen
+  verificationContent: {
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  verificationIconContainer: {
+    marginBottom: 24,
+  },
+  verificationTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 16,
+    textAlign: "center",
+    color: "#333",
+  },
+  verificationMessage: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 12,
+    lineHeight: 24,
+  },
+  emailHighlight: {
+    fontWeight: "600",
+    color: "#007AFF",
+  },
+  verificationInfoBox: {
+    flexDirection: "row",
+    backgroundColor: "#E8F4FF",
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 20,
+    marginBottom: 30,
+    alignItems: "flex-start",
+    gap: 12,
+    borderWidth: 1,
+    borderColor: "#C7E0F4",
+  },
+  verificationInfoText: {
+    flex: 1,
+    fontSize: 14,
+    color: "#0066CC",
+    lineHeight: 20,
+  },
+  verificationBackButton: {
+    marginTop: 16,
+    padding: 12,
+  },
+  verificationBackText: {
+    color: "#007AFF",
+    fontSize: 16,
+    textAlign: "center",
+  },
+  // My Events
   header: {
     flexDirection: "row",
     justifyContent: "space-between",

@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import * as Location from "expo-location";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Dimensions,
   StyleSheet,
@@ -35,14 +34,6 @@ export default function App() {
   const { events } = useEvents();
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
   const [showEventDetails, setShowEventDetails] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") return;
-      await Location.getCurrentPositionAsync({});
-    })();
-  }, []);
 
   const selectedEventData = events.find((e) => e.id === selectedEvent);
 

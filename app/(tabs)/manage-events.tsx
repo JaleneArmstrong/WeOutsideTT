@@ -96,55 +96,49 @@ export default function ManageEventsScreen() {
   };
 
   const handleAddEvent = () => {
-    if (
-      eventTitle &&
-      startDate &&
-      eventLocation &&
-      eventTags.length >= 3 &&
-      eventDescription
-    ) {
-      if (isMultiDay && endDate) {
-        const s = new Date(startDate);
-        const e = new Date(endDate);
-        if (e < s) return;
-      }
-      if (!isMultiDay && endDate) {
-        const s = new Date(startDate);
-        const e = new Date(endDate);
-        if (e < s) return;
-      }
-      if (
-        startDate &&
-        endDate &&
-        startDate === endDate &&
-        startTime &&
-        endTime
-      ) {
-        const sMin = timeStringToMinutes(startTime);
-        const eMin = timeStringToMinutes(endTime);
-        if (!isNaN(sMin) && !isNaN(eMin) && eMin < sMin) return;
-      }
+    if (eventTitle && startDate && eventLocation && eventTags.length >= 3 && eventDescription) {
+        // Validate end date/time
+        if (isMultiDay && endDate) {
+          const s = new Date(startDate);
+          const e = new Date(endDate);
+          if (e < s) return; // invalid
+        }
+        if (!isMultiDay && endDate) {
+          // if user provided endDate on single-day flow, ensure it's the same or after
+          const s = new Date(startDate);
+          const e = new Date(endDate);
+          if (e < s) return;
+        }
 
-      const newEvent: Event = {
-        id: Date.now().toString(),
-        title: eventTitle,
-        startDate: startDate,
-        endDate: isMultiDay ? endDate || startDate : endDate || startDate,
-        location: eventLocation,
-        tags: eventTags,
-        description: eventDescription,
-        startTime: startTime,
-        endTime: endTime,
-        creatorId: coordinatorName,
-      };
+        // if same day, ensure endTime >= startTime
+        if (startDate && endDate && startDate === endDate && startTime && endTime) {
+          const sMin = timeStringToMinutes(startTime);
+          const eMin = timeStringToMinutes(endTime);
+          if (!isNaN(sMin) && !isNaN(eMin) && eMin < sMin) return;
+        }
+
+        const newEvent: Event = {
+          id: Date.now().toString(),
+          title: eventTitle,
+          startDate: startDate,
+          endDate: isMultiDay ? endDate || startDate : endDate || startDate,
+          location: eventLocation,
+          tags: eventTags,
+          description: eventDescription,
+          startTime: startTime,
+          endTime: endTime,
+          creatorId: coordinatorName,
+        };
       addEvent(newEvent);
-      setEventTitle("");
+      
+      // Reset form
+      setEventTitle('');
       setIsMultiDay(false);
-      setStartDate("");
-      setEndDate("");
+      setStartDate('');
+      setEndDate('');
       setEventLocation(undefined);
       setEventTags([]);
-      setEventDescription("");
+      setEventDescription('');
       setStartTime(undefined);
       setEndTime(undefined);
       setShowAddEvent(false);
@@ -167,6 +161,7 @@ export default function ManageEventsScreen() {
     eventLocation &&
     eventTags.length >= 3 &&
     eventDescription.trim() &&
+    (!isMultiDay || endDate) &&
     (!startTime ||
       !endTime ||
       (startTime &&
@@ -319,6 +314,7 @@ export default function ManageEventsScreen() {
                       );
                     }
                     if (!eventDescription.trim()) missing.push("Description");
+                    if (isMultiDay && !endDate) missing.push("End date");
                     if (isMultiDay && endDate) {
                       const s = new Date(startDate);
                       const e = new Date(endDate);

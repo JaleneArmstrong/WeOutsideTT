@@ -34,13 +34,19 @@ export default function ManageEventsScreen() {
   const [endTime, setEndTime] = useState<string | undefined>();
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
+  // Email validation helper
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   // Login handler
   const handleLogin = () => {
     if (!email || !password) {
       setToastMsg('Please fill in all fields');
       return;
     }
-    if (!email.includes('@')) {
+    if (!isValidEmail(email)) {
       setToastMsg('Please enter a valid email address');
       return;
     }
@@ -59,7 +65,7 @@ export default function ManageEventsScreen() {
       setToastMsg('Please fill in all fields');
       return;
     }
-    if (!email.includes('@')) {
+    if (!isValidEmail(email)) {
       setToastMsg('Please enter a valid email address');
       return;
     }
@@ -381,6 +387,7 @@ export default function ManageEventsScreen() {
             <Text style={styles.switchAuthLink}>Don&apos;t have an account? Sign up</Text>
           </TouchableOpacity>
         </ScrollView>
+        <Toast message={toastMsg || ''} visible={!!toastMsg} onDismiss={() => setToastMsg(null)} />
       </View>
     );
   }
@@ -452,6 +459,7 @@ export default function ManageEventsScreen() {
             <Text style={styles.switchAuthLink}>Already have an account? Log in</Text>
           </TouchableOpacity>
         </ScrollView>
+        <Toast message={toastMsg || ''} visible={!!toastMsg} onDismiss={() => setToastMsg(null)} />
       </View>
     );
   }

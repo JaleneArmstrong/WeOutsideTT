@@ -1,0 +1,336 @@
+import { Dimensions, Platform, StyleSheet } from "react-native";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+
+export const COLLAPSED_HEIGHT = SCREEN_HEIGHT * 0.12;
+export const EXPANDED_HEIGHT = SCREEN_HEIGHT * 0.35;
+const BRAND_RED = "#D90429";
+
+export const getStyles = (theme: any) => {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: "#FFF" },
+    floatingSearchContainer: {
+      position: "absolute",
+      top: Platform.OS === "ios" ? 60 : 50,
+      left: 0,
+      right: 0,
+      alignItems: "center",
+      zIndex: 20,
+    },
+    searchBarRow: {
+      flexDirection: "row",
+      width: "90%",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    inputWrapper: {
+      flex: 1,
+      flexDirection: "row",
+      backgroundColor: "#FFF",
+      height: 50,
+      borderRadius: 25,
+      alignItems: "center",
+      paddingHorizontal: 20,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 5,
+      elevation: 8,
+    },
+    input: { flex: 1, fontSize: 16, color: "#000", height: "100%" },
+    cancelButton: {
+      marginLeft: 10,
+      backgroundColor: "#FFF",
+      paddingVertical: 12,
+      paddingHorizontal: 15,
+      borderRadius: 20,
+      elevation: 5,
+    },
+    cancelText: { color: "#CE1126", fontWeight: "bold" },
+    overlayContainer: {
+      position: "absolute",
+      bottom: 0,
+      width: "100%",
+      backgroundColor: "#FFF",
+      borderTopLeftRadius: 30,
+      borderTopRightRadius: 30,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: -3 },
+      shadowOpacity: 0.1,
+      shadowRadius: 10,
+      elevation: 20,
+      overflow: "hidden",
+    },
+    dragHandle: {
+      width: 40,
+      height: 4,
+      backgroundColor: "#DDD",
+      borderRadius: 2,
+      alignSelf: "center",
+      marginTop: 12,
+      marginBottom: 10,
+    },
+    bottomCardContent: {
+      paddingHorizontal: 20,
+      flex: 1,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: "bold",
+      marginBottom: 15,
+      marginTop: 5,
+      color: "#333",
+    },
+
+    // EVENT DETAILS
+    heroImage: {
+      width: "100%",
+      height: 220,
+      borderRadius: 24,
+      backgroundColor: "#EEE",
+      marginBottom: 20,
+      overflow: "hidden",
+    },
+    detailHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+      marginBottom: 15,
+      paddingHorizontal: 25,
+    },
+    titleStack: {
+      flex: 1,
+    },
+
+    vibeBadge: {
+      backgroundColor: BRAND_RED,
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+    },
+
+    vibeText: {
+      fontSize: 11,
+      fontWeight: "900",
+      color: "#FFFFFF",
+      textTransform: "uppercase",
+    },
+
+    mainTitle: {
+      fontSize: 28,
+      fontWeight: "900",
+      color: "#000000",
+      letterSpacing: -1,
+    },
+
+    metaPillContainer: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+      marginTop: 10,
+      alignSelf: "flex-start",
+      marginLeft: -10,
+    },
+
+    metaPill: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 12,
+    },
+    metaText: {
+      fontSize: 13,
+      fontWeight: "400",
+      color: "#1A1A1A",
+      marginLeft: 4,
+    },
+
+    tagsRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 10,
+      marginTop: 15,
+      paddingHorizontal: 25,
+    },
+    tagsList: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      flex: 1,
+      gap: 6,
+    },
+    tagBadge: {
+      backgroundColor: "#FFF0F0",
+      paddingVertical: 4,
+      paddingHorizontal: 10,
+      borderRadius: 8,
+      borderWidth: 1.5,
+      borderColor: "#FFDADA",
+    },
+    tagBadgeText: {
+      fontSize: 11,
+      color: BRAND_RED,
+      fontWeight: "800",
+      textTransform: "uppercase",
+    },
+
+    descriptionLabel: {
+      fontSize: 13,
+      fontWeight: "900",
+      color: "#000000",
+      marginTop: 20,
+      textTransform: "uppercase",
+      paddingHorizontal: 25,
+    },
+    descriptionText: {
+      fontSize: 15,
+      lineHeight: 22,
+      color: "#1A1A1A",
+      marginTop: 8,
+      fontWeight: "400",
+      paddingHorizontal: 25,
+    },
+
+    creatorText: {
+      fontSize: 12,
+      color: "#666666",
+      fontStyle: "italic",
+      marginTop: 12,
+      paddingHorizontal: 25,
+    },
+
+    actionContainer: {
+      flexDirection: "row",
+      gap: 12,
+      marginTop: 30,
+      paddingHorizontal: 25,
+    },
+    primaryButton: {
+      flex: 2,
+      backgroundColor: BRAND_RED,
+      paddingVertical: 16,
+      borderRadius: 18,
+      alignItems: "center",
+      justifyContent: "center",
+      flexDirection: "row",
+      elevation: 4,
+    },
+    secondaryButton: {
+      flex: 1,
+      backgroundColor: "#FFFFFF",
+      borderWidth: 2,
+      borderColor: "#EEEEEE",
+      paddingVertical: 16,
+      borderRadius: 18,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+
+    // MAP MARKERS & UI
+    marker: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: BRAND_RED,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 3,
+      borderColor: "#fff",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3,
+      elevation: 5,
+    },
+    eventCountBadge: {
+      position: "absolute",
+      top: 130,
+      right: 15,
+      backgroundColor: BRAND_RED,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderRadius: 15,
+      elevation: 5,
+    },
+    eventCountText: {
+      color: "#fff",
+      fontSize: 12,
+      fontWeight: "800",
+      textTransform: "uppercase",
+    },
+
+    // POPUP
+    popupBubble: {
+      backgroundColor: "#ffffff",
+      borderRadius: 24,
+      padding: 12,
+      paddingBottom: 10,
+      shadowColor: "#000",
+      shadowOpacity: 0.2,
+      shadowRadius: 15,
+      shadowOffset: { width: 0, height: 8 },
+      elevation: 10,
+      borderWidth: 1,
+      borderColor: "rgba(0,0,0,0.03)",
+    },
+    popupHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 4,
+    },
+    popupIcon: {
+      backgroundColor: "#1A1A1A",
+      borderRadius: 14,
+      width: 42,
+      height: 42,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    popupTextContainer: {
+      marginLeft: 12,
+      flex: 1,
+    },
+    popupTitle: {
+      fontWeight: "800",
+      fontSize: 16,
+      color: "#000",
+      letterSpacing: -0.4,
+    },
+    popupVibe: {
+      fontSize: 11,
+      color: "#CE1126",
+      fontWeight: "800",
+      textTransform: "uppercase",
+      marginTop: 1,
+    },
+    viewMoreButton: {
+      marginTop: 12,
+      backgroundColor: "#F5F5F5",
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderRadius: 16,
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "center",
+    },
+    viewMoreText: {
+      color: "#000",
+      fontWeight: "700",
+      fontSize: 12,
+      letterSpacing: 0.2,
+    },
+    popupPointer: {
+      width: 0,
+      height: 0,
+      backgroundColor: "transparent",
+      borderStyle: "solid",
+      borderLeftWidth: 10,
+      borderRightWidth: 10,
+      borderTopWidth: 12,
+      borderLeftColor: "transparent",
+      borderRightColor: "transparent",
+      borderTopColor: "#ffffff",
+      alignSelf: "center",
+    },
+  });
+};

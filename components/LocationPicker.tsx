@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { searchLocations } from '../constants/locations';
 import { EventLocation } from '../context/EventContext';
 
@@ -28,7 +28,7 @@ export function LocationPicker({ onSelectLocation, selectedLocation }: LocationP
   useEffect(() => {
     if (!showSuggestions) return;
     const q = searchQuery.trim();
-    if (!q || q.length < 3) {
+    if (!q || q.length < 2) {
       setNominatimResults([]);
       setNominatimError(null);
       setNominatimLoading(false);
@@ -40,7 +40,7 @@ export function LocationPicker({ onSelectLocation, selectedLocation }: LocationP
       setNominatimLoading(true);
       setNominatimError(null);
       try {
-        const url = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=tt&q=${encodeURIComponent(q)}&limit=6&addressdetails=1`;
+        const url = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=tt&q=${encodeURIComponent(q)}&limit=10&addressdetails=1`;
         const res = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': 'LimingMap/1.0' } });
         const json = await res.json();
         const results = (json || []).map((r: any) => ({ name: r.display_name, latitude: parseFloat(r.lat), longitude: parseFloat(r.lon) }));
@@ -51,7 +51,7 @@ export function LocationPicker({ onSelectLocation, selectedLocation }: LocationP
       } finally {
         setNominatimLoading(false);
       }
-    }, 300);
+    }, 200);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -128,34 +128,65 @@ export function LocationPicker({ onSelectLocation, selectedLocation }: LocationP
 
       {showSuggestions && (filteredLocations.length > 0 || nominatimResults.length > 0) && (
         <View style={styles.suggestionsContainer}>
-          <FlatList
-            data={[...filteredLocations, ...nominatimResults]}
-            keyExtractor={(item) => `${item.name}-${item.latitude}-${item.longitude}`}
-            scrollEnabled={false}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[
-                  styles.suggestionItem,
-                  selectedLocation?.name === item.name && styles.selectedSuggestion,
-                ]}
-                onPress={() => handleSelectLocation(item)}
-              >
-                <Ionicons name="location" size={14} color="#007AFF" />
-                <View style={styles.suggestionContent}>
-                  <Text style={styles.suggestionName}>{item.name}</Text>
-                  <Text style={styles.suggestionCoords}>
-                    {item.latitude.toFixed(4)}°, {item.longitude.toFixed(4)}°
-                  </Text>
+          <ScrollView style={styles.suggestionsScroll} keyboardShouldPersistTaps="handled">
+            {filteredLocations.length > 0 && (
+              <>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionHeaderText}>Popular Locations</Text>
                 </View>
-              </TouchableOpacity>
+                {filteredLocations.map((item) => (
+                  <TouchableOpacity
+                    key={`local-${item.name}-${item.latitude}-${item.longitude}`}
+                    style={[
+                      styles.suggestionItem,
+                      selectedLocation?.name === item.name && styles.selectedSuggestion,
+                    ]}
+                    onPress={() => handleSelectLocation(item)}
+                  >
+                    <Ionicons name="star" size={14} color="#FFD700" />
+                    <View style={styles.suggestionContent}>
+                      <Text style={styles.suggestionName}>{item.name}</Text>
+                      <Text style={styles.suggestionCoords}>
+                        {item.latitude.toFixed(4)}°, {item.longitude.toFixed(4)}°
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </>
             )}
-          />
-          {nominatimLoading && (
-            <View style={{ padding: 8, alignItems: 'center' }}>
-              <ActivityIndicator />
-            </View>
-          )}
-          {nominatimError ? <Text style={styles.geoError}>{nominatimError}</Text> : null}
+            {nominatimResults.length > 0 && (
+              <>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionHeaderText}>All Locations (OpenStreetMap)</Text>
+                </View>
+                {nominatimResults.map((item) => (
+                  <TouchableOpacity
+                    key={`osm-${item.name}-${item.latitude}-${item.longitude}`}
+                    style={[
+                      styles.suggestionItem,
+                      selectedLocation?.name === item.name && styles.selectedSuggestion,
+                    ]}
+                    onPress={() => handleSelectLocation(item)}
+                  >
+                    <Ionicons name="location" size={14} color="#007AFF" />
+                    <View style={styles.suggestionContent}>
+                      <Text style={styles.suggestionName}>{item.name}</Text>
+                      <Text style={styles.suggestionCoords}>
+                        {item.latitude.toFixed(4)}°, {item.longitude.toFixed(4)}°
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </>
+            )}
+            {nominatimLoading && (
+              <View style={{ padding: 8, alignItems: 'center' }}>
+                <ActivityIndicator />
+                <Text style={styles.loadingText}>Searching OpenStreetMap...</Text>
+              </View>
+            )}
+            {nominatimError ? <Text style={styles.geoError}>{nominatimError}</Text> : null}
+          </ScrollView>
         </View>
       )}
       {showSuggestions && searchQuery && filteredLocations.length === 0 && (
@@ -216,8 +247,29 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     borderRadius: 8,
     marginTop: 8,
-    maxHeight: 200,
+    maxHeight: 300,
     overflow: 'hidden',
+  },
+  suggestionsScroll: {
+    maxHeight: 300,
+  },
+  sectionHeader: {
+    backgroundColor: '#f5f5f5',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  sectionHeaderText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#666',
+    textTransform: 'uppercase',
+  },
+  loadingText: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 4,
   },
   suggestionItem: {
     flexDirection: 'row',

@@ -15,6 +15,9 @@ export default function ManageEventsScreen() {
   const [coordinatorName, setCoordinatorName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [organizerName, setOrganizerName] = useState('');
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [pendingEmail, setPendingEmail] = useState(''); // Store email for verification screen
@@ -33,25 +36,50 @@ export default function ManageEventsScreen() {
 
   // Login handler
   const handleLogin = () => {
-    if (email && password) {
-      setCoordinatorName(email.split('@')[0]);
-      setIsLoggedIn(true);
-      setEmail('');
-      setPassword('');
-      setScreen('events');
+    if (!email || !password) {
+      setToastMsg('Please fill in all fields');
+      return;
     }
+    if (!email.includes('@')) {
+      setToastMsg('Please enter a valid email address');
+      return;
+    }
+    // In a real app, validate credentials against backend
+    setCoordinatorName(email.split('@')[0]);
+    setIsLoggedIn(true);
+    setEmail('');
+    setPassword('');
+    setShowPassword(false);
+    setScreen('events');
   };
 
   // Sign up handler
   const handleSignUp = () => {
-    if (organizerName && email && password) {
-      setPendingEmail(email);
-      setCoordinatorName(organizerName);
-      setOrganizerName('');
-      setEmail('');
-      setPassword('');
-      setScreen('verification');
+    if (!organizerName || !email || !password || !confirmPassword) {
+      setToastMsg('Please fill in all fields');
+      return;
     }
+    if (!email.includes('@')) {
+      setToastMsg('Please enter a valid email address');
+      return;
+    }
+    if (password.length < 6) {
+      setToastMsg('Password must be at least 6 characters');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setToastMsg('Passwords do not match');
+      return;
+    }
+    setPendingEmail(email);
+    setCoordinatorName(organizerName);
+    setOrganizerName('');
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    setScreen('verification');
   };
 
   // Add event handler
@@ -329,13 +357,21 @@ export default function ManageEventsScreen() {
             onChangeText={setEmail}
           />
 
-          <TextInput
-            style={styles.authInput}
-            placeholder="Password"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Password"
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
+            />
+            <TouchableOpacity 
+              style={styles.eyeIcon}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Ionicons name={showPassword ? "eye-off" : "eye"} size={20} color="#999" />
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity style={styles.authButton} onPress={handleLogin}>
             <Text style={styles.authButtonText}>Log In</Text>
@@ -376,13 +412,37 @@ export default function ManageEventsScreen() {
             onChangeText={setEmail}
           />
 
-          <TextInput
-            style={styles.authInput}
-            placeholder="Password"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Password"
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
+            />
+            <TouchableOpacity 
+              style={styles.eyeIcon}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Ionicons name={showPassword ? "eye-off" : "eye"} size={20} color="#999" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Confirm Password"
+              secureTextEntry={!showConfirmPassword}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+            />
+            <TouchableOpacity 
+              style={styles.eyeIcon}
+              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+            >
+              <Ionicons name={showConfirmPassword ? "eye-off" : "eye"} size={20} color="#999" />
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity style={styles.authButton} onPress={handleSignUp}>
             <Text style={styles.authButtonText}>Sign Up</Text>
@@ -533,6 +593,24 @@ const styles = StyleSheet.create({
     marginTop: 15,
     color: '#007AFF',
     fontSize: 14,
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingRight: 12,
+    backgroundColor: '#fff',
+    marginBottom: 15,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 12,
+    fontSize: 16,
+  },
+  eyeIcon: {
+    padding: 8,
   },
   homeButtonContainer: {
     width: '100%',

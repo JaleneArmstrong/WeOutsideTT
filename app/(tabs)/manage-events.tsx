@@ -26,8 +26,6 @@ export default function ManageEventsScreen() {
   const [password, setPassword] = useState("");
   const [organizerName, setOrganizerName] = useState("");
   const [showAddEvent, setShowAddEvent] = useState(false);
-
-  // Event form state
   const [eventTitle, setEventTitle] = useState("");
   const [isMultiDay, setIsMultiDay] = useState(false);
   const [startDate, setStartDate] = useState("");
@@ -40,8 +38,6 @@ export default function ManageEventsScreen() {
   const [startTime, setStartTime] = useState<string | undefined>();
   const [endTime, setEndTime] = useState<string | undefined>();
   const [toastMsg, setToastMsg] = useState<string | null>(null);
-
-  // Login handler
   const handleLogin = () => {
     if (email && password) {
       setCoordinatorName(email.split("@")[0]);
@@ -52,7 +48,6 @@ export default function ManageEventsScreen() {
     }
   };
 
-  // Sign up handler
   const handleSignUp = () => {
     if (organizerName && email && password) {
       setCoordinatorName(organizerName);
@@ -64,7 +59,6 @@ export default function ManageEventsScreen() {
     }
   };
 
-  // Add event handler
   const handleAddEvent = () => {
     if (
       eventTitle &&
@@ -73,20 +67,16 @@ export default function ManageEventsScreen() {
       eventTags.length >= 3 &&
       eventDescription
     ) {
-      // Validate end date/time
       if (isMultiDay && endDate) {
-        const s = new Date(startDate);
-        const e = new Date(endDate);
-        if (e < s) return; // invalid
-      }
-      if (!isMultiDay && endDate) {
-        // if user provided endDate on single-day flow, ensure it's the same or after
         const s = new Date(startDate);
         const e = new Date(endDate);
         if (e < s) return;
       }
-
-      // if same day, ensure endTime >= startTime
+      if (!isMultiDay && endDate) {
+        const s = new Date(startDate);
+        const e = new Date(endDate);
+        if (e < s) return;
+      }
       if (
         startDate &&
         endDate &&
@@ -112,8 +102,6 @@ export default function ManageEventsScreen() {
         creatorId: coordinatorName,
       };
       addEvent(newEvent);
-
-      // Reset form
       setEventTitle("");
       setIsMultiDay(false);
       setStartDate("");
@@ -127,33 +115,28 @@ export default function ManageEventsScreen() {
     }
   };
 
-  // Delete event handler
   const handleDeleteEvent = (id: string) => {
     deleteEvent(id);
   };
 
-  // Logout handler
   const handleLogout = () => {
     setIsLoggedIn(false);
     setCoordinatorName("");
     setScreen("home");
   };
 
-  // Validation check
   const isEventFormValid =
     eventTitle.trim() &&
     startDate &&
     eventLocation &&
     eventTags.length >= 3 &&
     eventDescription.trim() &&
-    // time validation: if both times provided and same-day ensure end >= start
     (!startTime ||
       !endTime ||
       (startTime &&
         endTime &&
         timeStringToMinutes(endTime) >= timeStringToMinutes(startTime)));
 
-  // Render My Events screen
   if (isLoggedIn) {
     return (
       <View style={styles.container}>
@@ -415,7 +398,6 @@ export default function ManageEventsScreen() {
     );
   }
 
-  // Render Login screen
   if (screen === "login") {
     return (
       <View style={styles.authContainer}>
@@ -460,7 +442,6 @@ export default function ManageEventsScreen() {
     );
   }
 
-  // Render Sign Up screen
   if (screen === "signup") {
     return (
       <View style={styles.authContainer}>
@@ -512,7 +493,6 @@ export default function ManageEventsScreen() {
     );
   }
 
-  // Render Home screen
   return (
     <View style={styles.authContainer}>
       <ScrollView contentContainerStyle={styles.authScrollContent}>
@@ -566,7 +546,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     alignSelf: "flex-start",
   },
-  // Auth screens
   authTitle: {
     fontSize: 24,
     fontWeight: "bold",
@@ -624,7 +603,7 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 20,
   },
-  // My Events
+
   header: {
     flexDirection: "row",
     justifyContent: "space-between",

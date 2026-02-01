@@ -146,7 +146,7 @@ export default function LandingScreen() {
           <TouchableOpacity
             style={styles.button}
             activeOpacity={0.8}
-            onPress={() => router.replace("/role-selection")}
+            onPress={() => router.replace("/RoleSelectionScreen")}
           >
             <Text style={styles.buttonText}>Get Started</Text>
           </TouchableOpacity>

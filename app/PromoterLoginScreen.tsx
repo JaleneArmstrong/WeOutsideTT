@@ -32,7 +32,10 @@ export default function PromoterLoginScreen() {
   const [organizerName, setOrganizerName] = useState("");
 
   const handleAuthAction = () => {
-    router.push({ pathname: "/permissions", params: { role: "promoter" } });
+    router.push({
+      pathname: "/PermissionsScreen",
+      params: { role: "promoter" },
+    });
   };
 
   return (

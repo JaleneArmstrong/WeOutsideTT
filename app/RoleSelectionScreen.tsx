@@ -61,7 +61,10 @@ export default function RoleSelectionScreen() {
           style={styles.cardContainer}
           activeOpacity={0.9}
           onPress={() =>
-            router.push({ pathname: "/permissions", params: { role: "limer" } })
+            router.push({
+              pathname: "/PermissionsScreen",
+              params: { role: "limer" },
+            })
           }
         >
           <ImageBackground
@@ -87,7 +90,7 @@ export default function RoleSelectionScreen() {
         <TouchableOpacity
           style={styles.cardContainer}
           activeOpacity={0.9}
-          onPress={() => router.push("/promoter-login")}
+          onPress={() => router.push("/PromoterLoginScreen")}
         >
           <ImageBackground
             source={{ uri: currentImages.promoter }}

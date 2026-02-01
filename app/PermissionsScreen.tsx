@@ -30,13 +30,13 @@ export default function PermissionScreen() {
       await Location.requestForegroundPermissionsAsync();
       if (isPromoter) {
         await ImagePicker.requestMediaLibraryPermissionsAsync();
-        router.replace("/promoter-dashboard");
+        router.replace("/PromoterDashboard");
       } else {
-        router.replace("/map");
+        router.replace("/MapScreen");
       }
     } catch (error) {
       console.error("Permission error:", error);
-      router.replace("/role-selection");
+      router.replace("/RoleSelectionScreen");
     }
   };
 

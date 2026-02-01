@@ -15,7 +15,11 @@ export interface EventType {
   };
   status?: string;
   description?: string;
-  image?: string;
+  image?: string | null;
+  fullDateDisplay?: string;
+  locationName?: string;
+  tags?: string[];
+  creator?: string;
 }
 
 const afternoonStyle = [
@@ -119,13 +123,14 @@ const nightStyle = [
 ];
 
 const TnT_BOUNDS = { north: 11.4, south: 10.0, east: -60.7, west: -61.9 };
-const ZOOM_LIMITS = { minLatDelta: 0.05, maxLatDelta: 1.4 };
+const ZOOM_LIMITS = { minLatDelta: 0.002, maxLatDelta: 1.4 };
 
 interface MapLayerProps {
   events: EventType[];
   selectedEvent?: EventType | null;
   onMapPress?: () => void;
   onPinPress?: (event: EventType) => void;
+  routePath?: { latitude: number; longitude: number }[];
 }
 
 export default function MapLayer({
@@ -133,6 +138,7 @@ export default function MapLayer({
   selectedEvent,
   onMapPress,
   onPinPress,
+  routePath = [],
 }: MapLayerProps) {
   const styles = getStyles("light");
   const mapRef = useRef<MapView>(null);

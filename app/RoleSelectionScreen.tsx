@@ -113,9 +113,9 @@ export default function RoleSelectionScreen() {
           </ImageBackground>
         </TouchableOpacity>
 
-        <Text style={styles.footerText}>
+        {/* <Text style={styles.footerText}>
           Unsure? Start as a Limer. You can switch roles later.
-        </Text>
+        </Text> */}
       </View>
     </ImageBackground>
   );

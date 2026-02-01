@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
 import {
+  Alert,
   ImageBackground,
   Text,
   TouchableOpacity,
@@ -27,9 +28,23 @@ export default function PermissionScreen() {
 
   const handlePermissions = async () => {
     try {
-      await Location.requestForegroundPermissionsAsync();
+      const { status: locStatus } =
+        await Location.requestForegroundPermissionsAsync();
+
+      if (locStatus !== "granted") {
+        Alert.alert(
+          "Location Required",
+          "LimingMap needs your location to show nearby vibes and Maxi routes. Please enable it in settings.",
+        );
+        return;
+      }
+
       if (isPromoter) {
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
+        const { status: imgStatus } =
+          await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (imgStatus !== "granted") {
+          console.warn("Media library permission not granted");
+        }
         router.replace("/PromoterDashboard");
       } else {
         router.replace("/MapScreen");
@@ -62,7 +77,7 @@ export default function PermissionScreen() {
           </View>
 
           <Text style={styles.title}>
-            {isPromoter ? "Architect Access" : "Find the Scene"}
+            {isPromoter ? "Set the Scene" : "Find the Scene"}
           </Text>
 
           <Text style={styles.description}>

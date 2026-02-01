@@ -54,7 +54,6 @@ export default function App() {
 
   const selectedEventData = events.find((e) => e.id === selectedEvent);
 
-  // Request location permissions and get user's current location
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -74,7 +73,6 @@ export default function App() {
     })();
   }, []);
 
-  // Fetch route from OpenStreetMap Routing Service (OSRM)
   const fetchRoute = async (eventLat: number, eventLon: number) => {
     if (!userLocation) {
       Alert.alert(
@@ -96,7 +94,6 @@ export default function App() {
       setRouteCoordinates(coordinates);
       setShowRoute(true);
 
-      // Fit map to show entire route
       if (mapRef.current && coordinates.length > 0) {
         mapRef.current.fitToCoordinates(coordinates, {
           edgePadding: { top: 100, right: 50, bottom: 300, left: 50 },
@@ -114,7 +111,6 @@ export default function App() {
   const handleMarkerPress = (eventId: string) => {
     setSelectedEvent(eventId);
     setShowEventDetails(true);
-    // Clear previous route when selecting a new event
     setShowRoute(false);
     setRouteCoordinates([]);
   };

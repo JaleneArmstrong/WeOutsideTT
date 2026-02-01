@@ -1,9 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import * as Location from "expo-location";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import MapView, { Callout, Marker } from "react-native-maps";
 import { useEvents } from "../../context/EventContext";
+
 
 const CLEAN_MAP_STYLE = [
   {
@@ -27,17 +27,8 @@ const { height: screenHeight } = Dimensions.get("window");
 
 export default function App() {
   const { events } = useEvents();
-  // location is requested for permissions but not stored to avoid unused vars
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
   const [showEventDetails, setShowEventDetails] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") return;
-      await Location.getCurrentPositionAsync({});
-    })();
-  }, []);
 
   const selectedEventData = events.find((e) => e.id === selectedEvent);
 

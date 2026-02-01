@@ -1,7 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import React, { useEffect, useState } from "react";
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import MapView, { Callout, Marker } from "react-native-maps";
 import { useEvents } from "../../context/EventContext";
 
@@ -27,7 +33,6 @@ const { height: screenHeight } = Dimensions.get("window");
 
 export default function App() {
   const { events } = useEvents();
-  // location is requested for permissions but not stored to avoid unused vars
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
   const [showEventDetails, setShowEventDetails] = useState(false);
 
@@ -58,7 +63,6 @@ export default function App() {
         }}
         showsUserLocation={true}
       >
-        {/* Event markers */}
         {events.map((event) => (
           <Marker
             key={event.id}
@@ -80,8 +84,12 @@ export default function App() {
               <View style={styles.calloutContent}>
                 <Text style={styles.calloutTitle}>{event.title}</Text>
                 <Text style={styles.calloutSubtext}>
-                  {event.startDate}{event.endDate && event.endDate !== event.startDate ? ` — ${event.endDate}` : ''}
-                  {event.startTime ? ` • ${event.startTime}` : ''}{event.endTime ? ` — ${event.endTime}` : ''}
+                  {event.startDate}
+                  {event.endDate && event.endDate !== event.startDate
+                    ? ` — ${event.endDate}`
+                    : ""}
+                  {event.startTime ? ` • ${event.startTime}` : ""}
+                  {event.endTime ? ` — ${event.endTime}` : ""}
                 </Text>
               </View>
             </Callout>
@@ -89,7 +97,6 @@ export default function App() {
         ))}
       </MapView>
 
-      {/* Event details sheet */}
       {showEventDetails && selectedEventData && (
         <View style={styles.detailsSheet}>
           <View style={styles.detailsHeader}>
@@ -103,14 +110,25 @@ export default function App() {
             <View style={styles.detailRow}>
               <Ionicons name="calendar" size={16} color="#007AFF" />
               <Text style={styles.detailText}>
-                {selectedEventData.startDate}{selectedEventData.endDate && selectedEventData.endDate !== selectedEventData.startDate ? ` — ${selectedEventData.endDate}` : ''}
-                {selectedEventData.startTime ? ` • ${selectedEventData.startTime}` : ''}{selectedEventData.endTime ? ` — ${selectedEventData.endTime}` : ''}
+                {selectedEventData.startDate}
+                {selectedEventData.endDate &&
+                selectedEventData.endDate !== selectedEventData.startDate
+                  ? ` — ${selectedEventData.endDate}`
+                  : ""}
+                {selectedEventData.startTime
+                  ? ` • ${selectedEventData.startTime}`
+                  : ""}
+                {selectedEventData.endTime
+                  ? ` — ${selectedEventData.endTime}`
+                  : ""}
               </Text>
             </View>
 
             <View style={styles.detailRow}>
               <Ionicons name="location" size={16} color="#007AFF" />
-              <Text style={styles.detailText}>{selectedEventData.location.name}</Text>
+              <Text style={styles.detailText}>
+                {selectedEventData.location.name}
+              </Text>
             </View>
 
             <View style={styles.tagsRow}>
@@ -125,19 +143,24 @@ export default function App() {
             </View>
 
             <Text style={styles.descriptionLabel}>About this event:</Text>
-            <Text style={styles.description}>{selectedEventData.description}</Text>
+            <Text style={styles.description}>
+              {selectedEventData.description}
+            </Text>
 
             {selectedEventData.creatorId && (
-              <Text style={styles.creatorText}>By: {selectedEventData.creatorId}</Text>
+              <Text style={styles.creatorText}>
+                By: {selectedEventData.creatorId}
+              </Text>
             )}
           </View>
         </View>
       )}
 
-      {/* Event count badge */}
       {events.length > 0 && (
         <View style={styles.eventCountBadge}>
-          <Text style={styles.eventCountText}>{events.length} event{events.length !== 1 ? 's' : ''}</Text>
+          <Text style={styles.eventCountText}>
+            {events.length} event{events.length !== 1 ? "s" : ""}
+          </Text>
         </View>
       )}
     </View>

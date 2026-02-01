@@ -1,14 +1,14 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState } from "react";
 
 export const EVENT_TAGS = [
-  'fete',
-  'historical',
-  'educational',
-  'food-centric',
-  'festival',
-  'nature',
-  'music',
-  'free entry',
+  "fete",
+  "historical",
+  "educational",
+  "food-centric",
+  "festival",
+  "nature",
+  "music",
+  "free entry",
 ];
 
 export interface EventLocation {
@@ -20,13 +20,11 @@ export interface EventLocation {
 export interface Event {
   id: string;
   title: string;
-  // Start and end dates (endDate may equal startDate for single-day events)
   startDate: string;
   endDate?: string;
   location: EventLocation;
   tags: string[];
   description: string;
-  // Human readable times like "6:00 PM"
   startTime?: string;
   endTime?: string;
   creatorId?: string;
@@ -57,7 +55,9 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <EventContext.Provider value={{ events, addEvent, deleteEvent, updateEvent }}>
+    <EventContext.Provider
+      value={{ events, addEvent, deleteEvent, updateEvent }}
+    >
       {children}
     </EventContext.Provider>
   );
@@ -66,7 +66,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
 export function useEvents() {
   const context = useContext(EventContext);
   if (!context) {
-    throw new Error('useEvents must be used within an EventProvider');
+    throw new Error("useEvents must be used within an EventProvider");
   }
   return context;
 }

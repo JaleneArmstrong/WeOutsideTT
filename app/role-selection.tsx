@@ -4,105 +4,116 @@ import { StatusBar } from "expo-status-bar";
 import React from "react";
 import {
   ImageBackground,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  useColorScheme,
 } from "react-native";
+import { Colors } from "../constants/theme";
+import { getStyles } from "../styles/roleSelectionStyles";
 
-import { styles } from "../styles/roleSelectionStyles";
+const DOODLE_URI = "https://www.transparenttextures.com/patterns/skulls.png";
+
+const ROLE_IMAGES = {
+  light: {
+    limer:
+      "https://images.unsplash.com/photo-1523301343968-6a6ebf63c672?q=80&w=800",
+    promoter:
+      "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=800",
+  },
+  dark: {
+    limer:
+      "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=800",
+    promoter:
+      "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=800",
+  },
+};
 
 export default function RoleSelectionScreen() {
   const router = useRouter();
 
+  const colorScheme = useColorScheme() ?? "light";
+  const theme = Colors[colorScheme];
+  const styles = getStyles(theme);
+
+  const currentImages = ROLE_IMAGES[colorScheme];
+
   return (
     <ImageBackground
-      source={{
-        uri: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=90&w=1200&auto=format&fit=crop",
-      }}
+      source={{ uri: DOODLE_URI }}
       style={styles.container}
-      resizeMode="cover"
+      resizeMode="repeat"
+      imageStyle={styles.doodleImage}
     >
-      <View style={localStyles.backdropOverlay} />
-      <StatusBar style="light" />
+      <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
 
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>
-          Who is <Text style={styles.highlightText}>Outside?</Text>
-        </Text>
-        <Text style={styles.headerSubtitle}>
-          Choose your vibe to get started.
+      <View style={styles.content}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>
+            Who is <Text style={styles.highlightText}>Outside?</Text>
+          </Text>
+          <Text style={styles.headerSubtitle}>
+            Choose your vibe to get started.
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          style={styles.cardContainer}
+          activeOpacity={0.9}
+          onPress={() =>
+            router.push({ pathname: "/permissions", params: { role: "limer" } })
+          }
+        >
+          <ImageBackground
+            source={{ uri: currentImages.limer }}
+            style={styles.cardImage}
+          >
+            <View style={styles.cardOverlay}>
+              <View style={styles.iconBadge}>
+                <Ionicons name="people-outline" size={30} color="#FFF" />
+              </View>
+              <View>
+                <Text style={styles.roleTitle}>The Limer</Text>
+                <Text style={styles.roleDescription}>
+                  I'm just here to find the scene.
+                </Text>
+                <View style={styles.tagContainer}>
+                  <Text style={styles.tagText}>No Sign-up Needed</Text>
+                </View>
+              </View>
+            </View>
+          </ImageBackground>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.cardContainer}
+          activeOpacity={0.9}
+          onPress={() => router.push("/promoter-login")}
+        >
+          <ImageBackground
+            source={{ uri: currentImages.promoter }}
+            style={styles.cardImage}
+          >
+            <View style={styles.cardOverlay}>
+              <View style={styles.iconBadge}>
+                <Ionicons name="flash-outline" size={30} color="#FFF" />
+              </View>
+              <View>
+                <Text style={styles.roleTitle}>The Promoter</Text>
+                <Text style={styles.roleDescription}>
+                  I'm hosting and running the show.
+                </Text>
+                <View style={[styles.tagContainer, styles.promoterTag]}>
+                  <Text style={styles.tagText}>Admin Access</Text>
+                </View>
+              </View>
+            </View>
+          </ImageBackground>
+        </TouchableOpacity>
+
+        <Text style={styles.footerText}>
+          Unsure? Start as a Limer. You can switch roles later.
         </Text>
       </View>
-
-      <TouchableOpacity
-        style={styles.cardContainer}
-        activeOpacity={0.9}
-        onPress={() => router.push("/map")}
-      >
-        <ImageBackground
-          source={{
-            uri: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=90&w=1200&auto=format&fit=crop",
-          }}
-          style={styles.cardImage}
-          imageStyle={{ borderRadius: 18 }}
-        >
-          <View style={styles.cardOverlay}>
-            <View style={styles.iconBadge}>
-              <Ionicons name="people-outline" size={30} color="#FFF" />
-            </View>
-            <View>
-              <Text style={styles.roleTitle}>The Limer</Text>
-              <Text style={styles.roleDescription}>
-                I'm just here to find the scene and eat some food.
-              </Text>
-              <View style={styles.tagContainer}>
-                <Text style={styles.tagText}>No Sign-up Needed</Text>
-              </View>
-            </View>
-          </View>
-        </ImageBackground>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.cardContainer}
-        activeOpacity={0.9}
-        onPress={() => router.push("/promoter-login")}
-      >
-        <ImageBackground
-          source={{
-            uri: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=90&w=1200&auto=format&fit=crop",
-          }}
-          style={styles.cardImage}
-          imageStyle={{ borderRadius: 18 }}
-        >
-          <View style={styles.cardOverlay}>
-            <View style={styles.iconBadge}>
-              <Ionicons name="flash-outline" size={30} color="#FFF" />
-            </View>
-            <View>
-              <Text style={styles.roleTitle}>The Promoter</Text>
-              <Text style={styles.roleDescription}>
-                I'm hosting events, selling tickets, and running the show.
-              </Text>
-              <View style={[styles.tagContainer, styles.promoterTag]}>
-                <Text style={styles.tagText}>Admin Access</Text>
-              </View>
-            </View>
-          </View>
-        </ImageBackground>
-      </TouchableOpacity>
-
-      <Text style={styles.footerText}>
-        Unsure? Start as a Limer. You can switch accounts later.
-      </Text>
     </ImageBackground>
   );
 }
-
-const localStyles = StyleSheet.create({
-  backdropOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.85)",
-  },
-});

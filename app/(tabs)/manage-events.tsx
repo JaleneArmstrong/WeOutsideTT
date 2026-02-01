@@ -10,13 +10,14 @@ import { Event, EventLocation, useEvents } from '../../context/EventContext';
 
 export default function ManageEventsScreen() {
   const { events, addEvent, deleteEvent } = useEvents();
-  const [screen, setScreen] = useState<'home' | 'login' | 'signup' | 'events'>('home');
+  const [screen, setScreen] = useState<'home' | 'login' | 'signup' | 'verification' | 'events'>('home');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [coordinatorName, setCoordinatorName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [organizerName, setOrganizerName] = useState('');
   const [showAddEvent, setShowAddEvent] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState(''); // Store email for verification screen
 
   // Event form state
   const [eventTitle, setEventTitle] = useState('');
@@ -44,12 +45,12 @@ export default function ManageEventsScreen() {
   // Sign up handler
   const handleSignUp = () => {
     if (organizerName && email && password) {
+      setPendingEmail(email);
       setCoordinatorName(organizerName);
-      setIsLoggedIn(true);
       setOrganizerName('');
       setEmail('');
       setPassword('');
-      setScreen('events');
+      setScreen('verification');
     }
   };
 
@@ -395,6 +396,43 @@ export default function ManageEventsScreen() {
     );
   }
 
+  // Render Verification screen
+  if (screen === 'verification') {
+    return (
+      <View style={styles.authContainer}>
+        <ScrollView contentContainerStyle={styles.authScrollContent}>
+          <View style={styles.verificationContent}>
+            <View style={styles.verificationIconContainer}>
+              <Ionicons name="checkmark-circle" size={80} color="#34C759" />
+            </View>
+
+            <Text style={styles.verificationTitle}>Account Under Review</Text>
+            <Text style={styles.verificationMessage}>
+              Thank you for signing up! Your coordinator account is currently being reviewed by our team.
+            </Text>
+            <Text style={styles.verificationMessage}>
+              We will notify you via email at <Text style={styles.emailHighlight}>{pendingEmail}</Text> regarding the status of your account.
+            </Text>
+
+            <View style={styles.verificationInfoBox}>
+              <Ionicons name="information-circle-outline" size={20} color="#007AFF" />
+              <Text style={styles.verificationInfoText}>
+                Note: You can't create events while your account is under review.
+              </Text>
+            </View>
+
+            <TouchableOpacity 
+              style={styles.verificationBackButton} 
+              onPress={() => setScreen('home')}
+            >
+              <Text style={styles.verificationBackText}>Back to Home</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </View>
+    );
+  }
+
   // Render Home screen
   return (
     <View style={styles.authContainer}>
@@ -500,6 +538,59 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: 12,
     marginTop: 20,
+  },
+  // Verification screen
+  verificationContent: {
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  verificationIconContainer: {
+    marginBottom: 24,
+  },
+  verificationTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    textAlign: 'center',
+    color: '#333',
+  },
+  verificationMessage: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 12,
+    lineHeight: 24,
+  },
+  emailHighlight: {
+    fontWeight: '600',
+    color: '#007AFF',
+  },
+  verificationInfoBox: {
+    flexDirection: 'row',
+    backgroundColor: '#E8F4FF',
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 20,
+    marginBottom: 30,
+    alignItems: 'flex-start',
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#C7E0F4',
+  },
+  verificationInfoText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#0066CC',
+    lineHeight: 20,
+  },
+  verificationBackButton: {
+    marginTop: 16,
+    padding: 12,
+  },
+  verificationBackText: {
+    color: '#007AFF',
+    fontSize: 16,
+    textAlign: 'center',
   },
   // My Events
   header: {

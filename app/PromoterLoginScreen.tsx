@@ -24,7 +24,8 @@ const DOODLE_PATTERN =
   "https://www.transparenttextures.com/patterns/skulls.png";
 const BRAND_RED = "#D90429";
 
-const API_URL = ""; // TODO: To Add Render URL
+// 🚀 PRODUCTION URL
+const API_URL = "https://limingmap-backend.onrender.com";
 
 export default function PromoterLoginScreen() {
   const router = useRouter();
@@ -41,10 +42,31 @@ export default function PromoterLoginScreen() {
   const [organizerName, setOrganizerName] = useState("");
   const [company, setCompany] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Helper: Email Validation
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // --- MAIN AUTH HANDLER ---
   const handleAuthAction = async () => {
+    setErrorMsg(null);
+
+    // 1. Client-Side Validation
     if (!email || !password || (screen === "signup" && !organizerName)) {
-      Alert.alert("Missing Fields", "Please fill in all required fields.");
+      setErrorMsg("Please fill in all required fields.");
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      setErrorMsg("Please enter a valid email address.");
+      return;
+    }
+
+    if (screen === "signup" && password.length < 6) {
+      setErrorMsg("Password must be at least 6 characters.");
       return;
     }
 
@@ -52,13 +74,17 @@ export default function PromoterLoginScreen() {
 
     try {
       if (screen === "login") {
+        // --- LOGIN FLOW ---
         const success = await login(email, password);
 
         if (success) {
           await refreshEvents();
           router.replace("/MapScreen");
+        } else {
+          setErrorMsg("Invalid email or password.");
         }
       } else {
+        // --- REGISTER FLOW ---
         const response = await fetch(`${API_URL}/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -73,8 +99,11 @@ export default function PromoterLoginScreen() {
         const data = await response.json();
 
         if (response.ok) {
+          // A. Auto-Login
           await login(email, password);
           await refreshEvents();
+
+          // B. Check Permissions
           const { status: locationStatus } =
             await Location.getForegroundPermissionsAsync();
           const { status: mediaStatus } =
@@ -84,8 +113,10 @@ export default function PromoterLoginScreen() {
             locationStatus === "granted" && mediaStatus === "granted";
 
           if (allGranted) {
+            // Permissions exist? Go to Map.
             router.replace("/MapScreen");
           } else {
+            // Missing permissions? Go to Setup.
             router.replace({
               pathname: "/PermissionsScreen",
               params: {
@@ -95,15 +126,12 @@ export default function PromoterLoginScreen() {
             });
           }
         } else {
-          Alert.alert(
-            "Registration Failed",
-            data.error || "Could not create account",
-          );
+          setErrorMsg(data.error || "Could not create account");
         }
       }
     } catch (error) {
       console.error(error);
-      Alert.alert("Connection Error", "Check your laptop IP.");
+      Alert.alert("Connection Error", "Could not connect to the server.");
     } finally {
       setLoading(false);
     }
@@ -145,14 +173,20 @@ export default function PromoterLoginScreen() {
                 <>
                   <TouchableOpacity
                     style={styles.authButton}
-                    onPress={() => setScreen("login")}
+                    onPress={() => {
+                      setScreen("login");
+                      setErrorMsg(null);
+                    }}
                   >
                     <Text style={styles.authButtonText}>Login</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     style={styles.signUpButton}
-                    onPress={() => setScreen("signup")}
+                    onPress={() => {
+                      setScreen("signup");
+                      setErrorMsg(null);
+                    }}
                   >
                     <Text style={styles.signUpButtonText}>Create Account</Text>
                   </TouchableOpacity>
@@ -197,6 +231,24 @@ export default function PromoterLoginScreen() {
                     placeholderTextColor="#666666"
                   />
 
+                  {/* ERROR MESSAGE DISPLAY */}
+                  {errorMsg && (
+                    <View
+                      style={{
+                        backgroundColor: "rgba(255, 59, 48, 0.1)",
+                        padding: 12,
+                        borderRadius: 8,
+                        marginBottom: 12,
+                        borderWidth: 1,
+                        borderColor: "rgba(255, 59, 48, 0.3)",
+                      }}
+                    >
+                      <Text style={{ color: "#ff3b30", textAlign: "center" }}>
+                        {errorMsg}
+                      </Text>
+                    </View>
+                  )}
+
                   <TouchableOpacity
                     style={[styles.authButton, loading && { opacity: 0.7 }]}
                     onPress={handleAuthAction}
@@ -212,9 +264,10 @@ export default function PromoterLoginScreen() {
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    onPress={() =>
-                      setScreen(screen === "login" ? "signup" : "login")
-                    }
+                    onPress={() => {
+                      setScreen(screen === "login" ? "signup" : "login");
+                      setErrorMsg(null);
+                    }}
                     style={styles.switchAuthLink}
                   >
                     <Text style={styles.switchAuthText}>

@@ -22,7 +22,9 @@ import { Colors } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { Event, EventLocation, useEvents } from "../context/EventContext";
 import { getStyles } from "../styles/promoterDashboardStyles";
-const API_URL = ""; // TODO: To Add Render URL
+
+// 🚀 PRODUCTION URL
+const API_URL = "https://limingmap-backend.onrender.com";
 
 export default function PromoterDashboard() {
   const { promoterId } = useLocalSearchParams();
@@ -40,6 +42,7 @@ export default function PromoterDashboard() {
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Form State
   const [eventTitle, setEventTitle] = useState("");
   const [eventImage, setEventImage] = useState<string | null>(null);
   const [isMultiDay, setIsMultiDay] = useState(false);
@@ -53,18 +56,7 @@ export default function PromoterDashboard() {
   const [startTime, setStartTime] = useState<string | undefined>();
   const [endTime, setEndTime] = useState<string | undefined>();
 
-  const isEventFormValid =
-    eventTitle.trim() !== "" &&
-    startDate !== "" &&
-    eventLocation !== undefined &&
-    eventTags.length >= 3 &&
-    eventDescription.trim() !== "" &&
-    (!isMultiDay ||
-      (isMultiDay && endDate && new Date(endDate) >= new Date(startDate))) &&
-    (!startTime ||
-      !endTime ||
-      timeStringToMinutes(endTime) >= timeStringToMinutes(startTime));
-
+  // --- LOGOUT HANDLER ---
   const handleLogout = async () => {
     Alert.alert("Log Out", "Are you sure you want to sign out?", [
       { text: "Cancel", style: "cancel" },
@@ -79,6 +71,7 @@ export default function PromoterDashboard() {
     ]);
   };
 
+  // --- IMAGE PICKER ---
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -91,6 +84,7 @@ export default function PromoterDashboard() {
     }
   };
 
+  // --- RESET FORM ---
   const resetForm = () => {
     setEditingEventId(null);
     setEventTitle("");
@@ -105,6 +99,7 @@ export default function PromoterDashboard() {
     setEndTime(undefined);
   };
 
+  // --- EDIT HANDLER ---
   const handleEditPress = (event: Event) => {
     setEditingEventId(event.id);
     setEventTitle(event.title);
@@ -124,16 +119,70 @@ export default function PromoterDashboard() {
     setShowAddEvent(true);
   };
 
-  const handleSave = async () => {
-    if (!isEventFormValid) return;
+  // --- DELETE HANDLER ---
+  const confirmDelete = (id: string, title: string) => {
+    Alert.alert("Delete Event", `Are you sure you want to remove "${title}"?`, [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete", style: "destructive", onPress: () => deleteEvent(id) },
+    ]);
+  };
 
-    const parsedStart = new Date(startDate);
-    if (isNaN(parsedStart.getTime())) {
-      Alert.alert("Invalid Date", "The start date provided is not valid.");
+  // --- VALIDATION HELPERS (Merged from your snippet) ---
+  const validateEventDates = (): boolean => {
+    // 1. Check Multi-day logic
+    if (isMultiDay && endDate && startDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (end < start) return false;
+    }
+
+    // 2. Check Time logic (if same day)
+    const isSameDay =
+      !isMultiDay || (startDate && endDate && startDate === endDate);
+    if (isSameDay && startTime && endTime) {
+      const startMin = timeStringToMinutes(startTime);
+      const endMin = timeStringToMinutes(endTime);
+      if (!isNaN(startMin) && !isNaN(endMin) && endMin < startMin) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const getValidationErrors = (): string[] => {
+    const missing: string[] = [];
+    if (!eventTitle.trim()) missing.push("Title");
+    if (!startDate) missing.push("Start date");
+    if (!eventLocation) missing.push("Location");
+
+    if (eventTags.length < 3) {
+      const need = 3 - eventTags.length;
+      missing.push(`Select ${need} more tag${need > 1 ? "s" : ""}`);
+    }
+
+    if (!eventDescription.trim()) missing.push("Description");
+    if (isMultiDay && !endDate) missing.push("End date");
+
+    if (!validateEventDates()) {
+      missing.push("Check dates/times (End cannot be before Start)");
+    }
+
+    return missing;
+  };
+
+  // --- MAIN SAVE HANDLER ---
+  const handleSave = async () => {
+    // 1. Validate
+    const errors = getValidationErrors();
+    if (errors.length > 0) {
+      setToastMsg(`Missing: ${errors.join(", ")}`);
       return;
     }
 
     setLoading(true);
+
+    // 2. Prepare Data
     const eventData = {
       title: eventTitle,
       image: eventImage,
@@ -152,6 +201,7 @@ export default function PromoterDashboard() {
     };
 
     try {
+      // 3. Send to API
       const endpoint = editingEventId
         ? `${API_URL}/events/${editingEventId}`
         : `${API_URL}/events`;
@@ -168,27 +218,22 @@ export default function PromoterDashboard() {
         setShowAddEvent(false);
         resetForm();
         refreshEvents();
+      } else {
+        const errorData = await response.json();
+        Alert.alert("Error", errorData.error || "Something went wrong");
       }
     } catch (error) {
-      Alert.alert(
-        "Connection Error",
-        "Is the server running on your Acer Swift?",
-      );
+      Alert.alert("Connection Error", "Could not connect to the server.");
     } finally {
       setLoading(false);
     }
   };
 
-  const confirmDelete = (id: string, title: string) => {
-    Alert.alert("Delete Event", `Are you sure you want to remove "${title}"?`, [
-      { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: () => deleteEvent(id) },
-    ]);
-  };
-
   return (
     <View style={styles.container}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
+
+      {/* HEADER */}
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>Your Events</Text>
@@ -227,6 +272,7 @@ export default function PromoterDashboard() {
         </View>
       </View>
 
+      {/* FORM OR LIST */}
       {showAddEvent ? (
         <ScrollView
           style={styles.formSection}
@@ -236,6 +282,7 @@ export default function PromoterDashboard() {
             {editingEventId ? "Edit Event" : "New Event"}
           </Text>
 
+          {/* COVER PHOTO */}
           <Text style={styles.label}>Cover Photo</Text>
           <TouchableOpacity
             style={{
@@ -270,7 +317,10 @@ export default function PromoterDashboard() {
             )}
           </TouchableOpacity>
 
-          <Text style={styles.label}>Event Title *</Text>
+          {/* TITLE */}
+          <Text style={styles.label}>
+            Event Title <Text style={{ color: "#ff3b30" }}>*</Text>
+          </Text>
           <TextInput
             style={styles.input}
             value={eventTitle}
@@ -279,7 +329,10 @@ export default function PromoterDashboard() {
             placeholderTextColor="#666"
           />
 
-          <Text style={styles.label}>Start Date *</Text>
+          {/* DATES */}
+          <Text style={styles.label}>
+            Start Date <Text style={{ color: "#ff3b30" }}>*</Text>
+          </Text>
           <DatePicker
             selectedDate={
               startDate
@@ -313,7 +366,9 @@ export default function PromoterDashboard() {
 
           {isMultiDay && (
             <>
-              <Text style={styles.label}>End Date *</Text>
+              <Text style={styles.label}>
+                End Date <Text style={{ color: "#ff3b30" }}>*</Text>
+              </Text>
               <DatePicker
                 selectedDate={endDate}
                 onDateChange={(date) => setEndDate(date.toString())}
@@ -322,6 +377,7 @@ export default function PromoterDashboard() {
             </>
           )}
 
+          {/* TIMES */}
           <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
             <View style={{ flex: 1 }}>
               <Text style={styles.label}>Start Time</Text>
@@ -341,30 +397,53 @@ export default function PromoterDashboard() {
             </View>
           </View>
 
-          <Text style={styles.label}>Location *</Text>
+          {/* LOCATION */}
+          <Text style={styles.label}>
+            Location <Text style={{ color: "#ff3b30" }}>*</Text>
+          </Text>
           <LocationPicker
             selectedLocation={eventLocation}
             onSelectLocation={setEventLocation}
             style={styles.input}
           />
 
-          <Text style={styles.label}>Tags (Min 3) *</Text>
+          {/* TAGS */}
+          <Text style={styles.label}>
+            Tags (Min 3) <Text style={{ color: "#ff3b30" }}>*</Text>
+          </Text>
           <TagSelector
             selectedTags={eventTags}
             onTagsChange={setEventTags}
             minTags={3}
           />
 
-          <Text style={styles.label}>Description *</Text>
+          {/* DESCRIPTION */}
+          <Text style={styles.label}>
+            Description <Text style={{ color: "#ff3b30" }}>*</Text>
+          </Text>
           <TextInput
             style={[styles.input, { height: 100 }]}
             multiline
-            placeholder="Describe the vibe..."
+            placeholder="Describe the vibe... Cost, tickets, etc."
             value={eventDescription}
             onChangeText={setEventDescription}
             placeholderTextColor="#666"
           />
+          {/* ✨ UX IMPROVEMENT FROM YOUR CODE ✨ */}
+          <Text
+            style={{
+              fontSize: 12,
+              color: "#666",
+              marginTop: 6,
+              marginBottom: 12,
+              fontStyle: "italic",
+            }}
+          >
+            💡 Include info about: admission cost, ticket details, registration
+            requirements, and links to book or register.
+          </Text>
 
+          {/* BUTTONS */}
           <View style={styles.formButtonContainer}>
             <TouchableOpacity
               style={styles.cancelBtn}
@@ -380,11 +459,10 @@ export default function PromoterDashboard() {
                 styles.createBtn,
                 {
                   backgroundColor: theme.BRAND_RED,
-                  opacity: isEventFormValid ? 1 : 0.5,
                 },
               ]}
               onPress={handleSave}
-              disabled={!isEventFormValid || loading}
+              disabled={loading}
             >
               <Text style={styles.createBtnText}>
                 {loading
@@ -397,6 +475,7 @@ export default function PromoterDashboard() {
           </View>
         </ScrollView>
       ) : (
+        /* LIST VIEW */
         <ScrollView
           style={styles.eventsList}
           showsVerticalScrollIndicator={false}

@@ -12,20 +12,31 @@ export const MAXI_STOPS = [
   { name: "Diego Martin", lat: 10.7167, lon: -61.55 },
   { name: "Petit Valley", lat: 10.6833, lon: -61.5333 },
   { name: "Chaguaramas", lat: 10.6833, lon: -61.6333 },
+  { name: "La Brea", lat: 10.2167, lon: -61.6167 },
+  { name: "Point Fortin", lat: 10.1833, lon: -61.6833 },
+  { name: "Erin", lat: 10.1, lon: -61.65 },
+  { name: "Moruga", lat: 10.0667, lon: -61.2833 },
 ];
 
 export const MAXI_ROUTES = [
   {
     color: "black",
     colorCode: "#000000",
-    route: "San Fernando – Princes Town connecting to Mayaro",
+    route: "San Fernando - Princes Town connecting to Mayaro",
     stops: ["San Fernando", "Princes Town", "Mayaro"],
   },
   {
     color: "brown",
     colorCode: "#8B4513",
-    route: "San Fernando-La Romaine-Siparia-Port of Spain",
-    stops: ["San Fernando", "La Romaine", "Siparia", "Port of Spain"],
+    route: "San Fernando-La Brea-Point Fortin-Siparia-Erin-Moruga",
+    stops: [
+      "San Fernando",
+      "La Brea",
+      "Point Fortin",
+      "Siparia",
+      "Erin",
+      "Moruga",
+    ],
   },
   {
     color: "green",
@@ -36,7 +47,7 @@ export const MAXI_ROUTES = [
   {
     color: "red",
     colorCode: "#FF0000",
-    route: "Port of Spain – Arima, connecting to Sangre Grande",
+    route: "Port of Spain - Arima, connecting to Sangre Grande",
     stops: ["Port of Spain", "Arima", "Sangre Grande"],
   },
   {

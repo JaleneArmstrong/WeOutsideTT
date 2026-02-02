@@ -157,6 +157,22 @@ export default function MapLayer({
     else setMapStyle([]);
   }, []);
 
+  // When an outside component selects an event programmatically,
+  // animate the map and queue a popup for it (so popupPos is calculated)
+  useEffect(() => {
+    if (selectedEvent && mapRef.current) {
+      pendingPopupEvent.current = selectedEvent;
+      mapRef.current.animateToRegion(
+        {
+          latitude: selectedEvent.coords.lat,
+          longitude: selectedEvent.coords.lng,
+          latitudeDelta: 0.008,
+          longitudeDelta: 0.008,
+        },
+        400,
+      );
+    }
+  }, [selectedEvent]);
   const handlePinPress = (event: EventType) => {
     setPopupPos(null);
     pendingPopupEvent.current = event;

@@ -47,6 +47,105 @@ export const getStyles = (theme: any) => {
       elevation: 5,
     },
     cancelText: { color: "#CE1126", fontWeight: "bold" },
+
+    // SEARCH SUGGESTIONS
+    searchSuggestions: {
+      position: "absolute",
+      top: 70,
+      width: "75%",
+      backgroundColor: "#FFF",
+      borderRadius: 12,
+      paddingVertical: 6,
+      paddingHorizontal: 6,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.12,
+      shadowRadius: 12,
+      elevation: 12,
+      zIndex: 30,
+      maxHeight: 220,
+    },
+    suggestionItem: {
+      paddingVertical: 10,
+      paddingHorizontal: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: "#F0F0F0",
+    },
+    suggestionTitle: {
+      fontWeight: "700",
+      fontSize: 15,
+      color: "#111",
+    },
+    suggestionSubtitle: {
+      fontSize: 12,
+      color: "#666",
+      marginTop: 4,
+    },
+
+    searchQueryText: {
+      fontSize: 13,
+      color: "#666",
+      marginTop: 4,
+    },
+
+    // TAG FILTER CHIPS
+    tagFilterChip: {
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderRadius: 20,
+      borderWidth: 1.5,
+      borderColor: "#E6E6E6",
+      backgroundColor: "#FFF",
+    },
+    tagFilterChipActive: {
+      backgroundColor: "#D90429",
+      borderColor: "#D90429",
+    },
+    tagFilterChipText: {
+      color: "#333",
+      fontWeight: "600",
+      fontSize: 13,
+    },
+    tagFilterChipTextActive: {
+      color: "#FFF",
+      fontWeight: "700",
+      fontSize: 13,
+    },
+
+    // EXPANDED SEARCH OVERLAY
+    searchOverlay: {
+      position: "absolute",
+      top: Platform.OS === "ios" ? 90 : 80,
+      left: 12,
+      right: 12,
+      bottom: 40,
+      backgroundColor: "#FFF",
+      borderRadius: 14,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.12,
+      shadowRadius: 12,
+      elevation: 12,
+      zIndex: 40,
+      overflow: "hidden",
+    },
+    searchOverlayInner: {
+      flex: 1,
+      flexDirection: "row",
+      gap: 12,
+      backgroundColor: "#FFF",
+    },
+    searchResults: {
+      flex: 3,
+      padding: 12,
+    },
+    filtersPanel: {
+      flex: 1,
+      borderLeftWidth: 1,
+      borderLeftColor: "#F3F3F3",
+      backgroundColor: "#FFF",
+    },
+
     overlayContainer: {
       position: "absolute",
       bottom: 0,

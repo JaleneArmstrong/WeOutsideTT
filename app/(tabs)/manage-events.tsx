@@ -15,39 +15,64 @@ import { TimePicker, timeStringToMinutes } from "../../components/TimePicker";
 import Toast from "../../components/Toast";
 import { Event, EventLocation, useEvents } from "../../context/EventContext";
 
+type ScreenType = "home" | "login" | "signup" | "verification" | "events";
+
 export default function ManageEventsScreen() {
   const { events, addEvent, deleteEvent } = useEvents();
-  const [screen, setScreen] = useState<
-    "home" | "login" | "signup" | "verification" | "events"
-  >("home");
+
+  // Navigation & Auth State
+  const [screen, setScreen] = useState<ScreenType>("home");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [coordinatorName, setCoordinatorName] = useState("");
+  const [pendingEmail, setPendingEmail] = useState("");
+
+  // Auth Form State
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [organizerName, setOrganizerName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [organizerName, setOrganizerName] = useState("");
-  const [showAddEvent, setShowAddEvent] = useState(false);
-  const [pendingEmail, setPendingEmail] = useState("");
 
+  // Event Form State
+  const [showAddEvent, setShowAddEvent] = useState(false);
   const [eventTitle, setEventTitle] = useState("");
   const [isMultiDay, setIsMultiDay] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [eventLocation, setEventLocation] = useState<
-    EventLocation | undefined
-  >();
-  const [eventTags, setEventTags] = useState<string[]>([]);
-  const [eventDescription, setEventDescription] = useState("");
   const [startTime, setStartTime] = useState<string | undefined>();
   const [endTime, setEndTime] = useState<string | undefined>();
+  const [eventLocation, setEventLocation] = useState<EventLocation | undefined>();
+  const [eventTags, setEventTags] = useState<string[]>([]);
+  const [eventDescription, setEventDescription] = useState("");
+
+  // UI State
+  // UI State
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  // ============ VALIDATION HELPERS ============
 
   const isValidEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
+
+  const isEventFormValid =
+    eventTitle.trim() &&
+    startDate &&
+    eventLocation &&
+    eventTags.length >= 3 &&
+    eventDescription.trim() &&
+    (!isMultiDay || endDate) &&
+    (!startTime ||
+      !endTime ||
+      (startTime &&
+        endTime &&
+        timeStringToMinutes(endTime) >= timeStringToMinutes(startTime)));
+
+  // ============ AUTH HANDLERS ============
+
+  // ============ AUTH HANDLERS ============
 
   const handleLogin = () => {
     if (!email || !password) {
@@ -95,78 +120,125 @@ export default function ManageEventsScreen() {
     setScreen("verification");
   };
 
-  const handleAddEvent = () => {
-    if (eventTitle && startDate && eventLocation && eventTags.length >= 3 && eventDescription) {
-        // Validate end date/time
-        if (isMultiDay && endDate) {
-          const s = new Date(startDate);
-          const e = new Date(endDate);
-          if (e < s) return; // invalid
-        }
-        if (!isMultiDay && endDate) {
-          // if user provided endDate on single-day flow, ensure it's the same or after
-          const s = new Date(startDate);
-          const e = new Date(endDate);
-          if (e < s) return;
-        }
-
-        // if same day, ensure endTime >= startTime
-        if (startDate && endDate && startDate === endDate && startTime && endTime) {
-          const sMin = timeStringToMinutes(startTime);
-          const eMin = timeStringToMinutes(endTime);
-          if (!isNaN(sMin) && !isNaN(eMin) && eMin < sMin) return;
-        }
-
-        const newEvent: Event = {
-          id: Date.now().toString(),
-          title: eventTitle,
-          startDate: startDate,
-          endDate: isMultiDay ? endDate || startDate : endDate || startDate,
-          location: eventLocation,
-          tags: eventTags,
-          description: eventDescription,
-          startTime: startTime,
-          endTime: endTime,
-          creatorId: coordinatorName,
-        };
-      addEvent(newEvent);
-      
-      // Reset form
-      setEventTitle('');
-      setIsMultiDay(false);
-      setStartDate('');
-      setEndDate('');
-      setEventLocation(undefined);
-      setEventTags([]);
-      setEventDescription('');
-      setStartTime(undefined);
-      setEndTime(undefined);
-      setShowAddEvent(false);
-    }
-  };
-
-  const handleDeleteEvent = (id: string) => {
-    deleteEvent(id);
-  };
-
   const handleLogout = () => {
     setIsLoggedIn(false);
     setCoordinatorName("");
     setScreen("home");
   };
 
-  const isEventFormValid =
-    eventTitle.trim() &&
-    startDate &&
-    eventLocation &&
-    eventTags.length >= 3 &&
-    eventDescription.trim() &&
-    (!isMultiDay || endDate) &&
-    (!startTime ||
-      !endTime ||
-      (startTime &&
-        endTime &&
-        timeStringToMinutes(endTime) >= timeStringToMinutes(startTime)));
+  // ============ EVENT HANDLERS ============
+
+  const resetEventForm = () => {
+    setEventTitle("");
+    setIsMultiDay(false);
+    setStartDate("");
+    setEndDate("");
+    setEventLocation(undefined);
+    setEventTags([]);
+    setEventDescription("");
+    setStartTime(undefined);
+    setEndTime(undefined);
+    setShowAddEvent(false);
+  };
+
+  const validateEventDates = (): boolean => {
+    if (isMultiDay && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (end < start) return false;
+    }
+
+    if (startDate && endDate && startDate === endDate && startTime && endTime) {
+      const startMin = timeStringToMinutes(startTime);
+      const endMin = timeStringToMinutes(endTime);
+      if (!isNaN(startMin) && !isNaN(endMin) && endMin < startMin) return false;
+    }
+
+    return true;
+  };
+
+  const handleAddEvent = () => {
+    if (!eventTitle || !startDate || !eventLocation || eventTags.length < 3 || !eventDescription) {
+      return;
+    }
+
+    if (!validateEventDates()) {
+      return;
+    }
+
+    const newEvent: Event = {
+      id: Date.now().toString(),
+      title: eventTitle,
+      startDate,
+      endDate: isMultiDay ? endDate || startDate : endDate || startDate,
+      location: eventLocation,
+      tags: eventTags,
+      description: eventDescription,
+      startTime,
+      endTime,
+      creatorId: coordinatorName,
+    };
+
+    addEvent(newEvent);
+    resetEventForm();
+  };
+
+  const handleDeleteEvent = (id: string) => {
+    deleteEvent(id);
+  };
+
+  // ============ VALIDATION MESSAGE HELPER ============
+
+  const getValidationErrors = (): string[] => {
+    const missing: string[] = [];
+
+    if (!eventTitle.trim()) missing.push("Title");
+    if (!startDate) missing.push("Start date");
+    if (!eventLocation) missing.push("Location");
+
+    if (eventTags.length < 3) {
+      const need = 3 - eventTags.length;
+      missing.push(
+        need > 0
+          ? `Select ${need} more tag${need > 1 ? "s" : ""}`
+          : "Select at least 3 tags"
+      );
+    }
+
+    if (!eventDescription.trim()) missing.push("Description");
+    if (isMultiDay && !endDate) missing.push("End date");
+
+    if (isMultiDay && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (end < start) missing.push("End date cannot be before start date");
+    }
+
+    if (startDate && endDate && startDate === endDate && startTime && endTime) {
+      const startMin = timeStringToMinutes(startTime);
+      const endMin = timeStringToMinutes(endTime);
+      if (!isNaN(startMin) && !isNaN(endMin) && endMin < startMin) {
+        missing.push("End time cannot be before start time");
+      }
+    }
+
+    return missing;
+  };
+
+  const handleCreateEventClick = () => {
+    if (!isEventFormValid) {
+      const errors = getValidationErrors();
+      const msg =
+        errors.length > 0
+          ? `Missing from event details: ${errors.join(", ")}`
+          : "One or more fields are incomplete";
+      setToastMsg(msg);
+      return;
+    }
+    handleAddEvent();
+  };
+
+  // ============ RENDER SECTIONS ============
 
   if (isLoggedIn) {
     return (
@@ -299,50 +371,7 @@ export default function ManageEventsScreen() {
                   styles.createBtn,
                   !isEventFormValid && styles.disabledBtn,
                 ]}
-                onPress={() => {
-                  if (!isEventFormValid) {
-                    const missing: string[] = [];
-                    if (!eventTitle.trim()) missing.push("Title");
-                    if (!startDate) missing.push("Start date");
-                    if (!eventLocation) missing.push("Location");
-                    if (eventTags.length < 3) {
-                      const need = 3 - eventTags.length;
-                      missing.push(
-                        need > 0
-                          ? `Select ${need} more tag${need > 1 ? "s" : ""}`
-                          : "Select at least 3 tags",
-                      );
-                    }
-                    if (!eventDescription.trim()) missing.push("Description");
-                    if (isMultiDay && !endDate) missing.push("End date");
-                    if (isMultiDay && endDate) {
-                      const s = new Date(startDate);
-                      const e = new Date(endDate);
-                      if (e < s)
-                        missing.push("End date cannot be before start date");
-                    }
-                    if (
-                      startDate &&
-                      endDate &&
-                      startDate === endDate &&
-                      startTime &&
-                      endTime
-                    ) {
-                      const sMin = timeStringToMinutes(startTime);
-                      const eMin = timeStringToMinutes(endTime);
-                      if (!isNaN(sMin) && !isNaN(eMin) && eMin < sMin)
-                        missing.push("End time cannot be before start time");
-                    }
-
-                    const msg =
-                      missing.length > 0
-                        ? `Missing from event details: ${missing.join(", ")}`
-                        : "One or more fields are incomplete";
-                    setToastMsg(msg);
-                    return;
-                  }
-                  handleAddEvent();
-                }}
+                onPress={handleCreateEventClick}
               >
                 <Text style={styles.createBtnText}>Create Event</Text>
               </TouchableOpacity>

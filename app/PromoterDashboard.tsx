@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
   Alert,
@@ -19,26 +19,32 @@ import { TagSelector } from "../components/TagSelector";
 import { TimePicker, timeStringToMinutes } from "../components/TimePicker";
 import Toast from "../components/Toast";
 import { Colors } from "../constants/theme";
+import { useAuth } from "../context/AuthContext";
 import { Event, EventLocation, useEvents } from "../context/EventContext";
 import { getStyles } from "../styles/promoterDashboardStyles";
+const API_URL = ""; // TODO: To Add Render URL
 
 export default function PromoterDashboard() {
-  const { events, addEvent, deleteEvent, updateEvent } = useEvents();
+  const { promoterId } = useLocalSearchParams();
+  const { events, deleteEvent, refreshEvents } = useEvents();
+  const { logout } = useAuth();
   const router = useRouter();
 
   const colorScheme = useColorScheme() ?? "light";
   const theme = Colors[colorScheme];
   const styles = getStyles(theme);
   const isDark = colorScheme === "dark";
+
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const [eventTitle, setEventTitle] = useState("");
   const [eventImage, setEventImage] = useState<string | null>(null);
   const [isMultiDay, setIsMultiDay] = useState(false);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
   const [eventLocation, setEventLocation] = useState<
     EventLocation | undefined
   >();
@@ -59,9 +65,23 @@ export default function PromoterDashboard() {
       !endTime ||
       timeStringToMinutes(endTime) >= timeStringToMinutes(startTime));
 
+  const handleLogout = async () => {
+    Alert.alert("Log Out", "Are you sure you want to sign out?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Log Out",
+        style: "destructive",
+        onPress: async () => {
+          await logout();
+          router.replace("/PromoterLoginScreen");
+        },
+      },
+    ]);
+  };
+
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [16, 9],
       quality: 0.8,
@@ -92,7 +112,11 @@ export default function PromoterDashboard() {
     setStartDate(event.startDate);
     setEndDate(event.endDate || "");
     setIsMultiDay(!!event.endDate && event.endDate !== event.startDate);
-    setEventLocation(event.location);
+    setEventLocation({
+      name: event.locationName,
+      latitude: event.latitude,
+      longitude: event.longitude,
+    });
     setEventTags(event.tags);
     setEventDescription(event.description);
     setStartTime(event.startTime);
@@ -100,66 +124,84 @@ export default function PromoterDashboard() {
     setShowAddEvent(true);
   };
 
+  const handleSave = async () => {
+    if (!isEventFormValid) return;
+
+    const parsedStart = new Date(startDate);
+    if (isNaN(parsedStart.getTime())) {
+      Alert.alert("Invalid Date", "The start date provided is not valid.");
+      return;
+    }
+
+    setLoading(true);
+    const eventData = {
+      title: eventTitle,
+      image: eventImage,
+      startDate: new Date(startDate).toISOString(),
+      endDate: isMultiDay
+        ? new Date(endDate).toISOString()
+        : new Date(startDate).toISOString(),
+      locationName: eventLocation?.name,
+      latitude: eventLocation?.latitude,
+      longitude: eventLocation?.longitude,
+      tags: eventTags,
+      description: eventDescription,
+      startTime,
+      endTime,
+      promoterId: Number(promoterId),
+    };
+
+    try {
+      const endpoint = editingEventId
+        ? `${API_URL}/events/${editingEventId}`
+        : `${API_URL}/events`;
+      const method = editingEventId ? "PUT" : "POST";
+
+      const response = await fetch(endpoint, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(eventData),
+      });
+
+      if (response.ok) {
+        setToastMsg(editingEventId ? "Event updated!" : "Event posted!");
+        setShowAddEvent(false);
+        resetForm();
+        refreshEvents();
+      }
+    } catch (error) {
+      Alert.alert(
+        "Connection Error",
+        "Is the server running on your Acer Swift?",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const confirmDelete = (id: string, title: string) => {
     Alert.alert("Delete Event", `Are you sure you want to remove "${title}"?`, [
       { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => {
-          deleteEvent(id);
-          setToastMsg("Event deleted.");
-        },
-      },
+      { text: "Delete", style: "destructive", onPress: () => deleteEvent(id) },
     ]);
-  };
-
-  const handleSave = () => {
-    if (isEventFormValid) {
-      const eventData: Event = {
-        id: editingEventId || Date.now().toString(),
-        title: eventTitle,
-        image: eventImage,
-        startDate,
-        endDate: isMultiDay ? endDate || startDate : startDate,
-        location: eventLocation!,
-        tags: eventTags,
-        description: eventDescription,
-        startTime,
-        endTime,
-        creatorId: "current-promoter",
-      };
-
-      if (editingEventId) {
-        updateEvent(editingEventId, eventData);
-        setToastMsg("Event updated!");
-      } else {
-        addEvent(eventData);
-        setToastMsg("Event posted!");
-      }
-
-      setShowAddEvent(false);
-      resetForm();
-    }
   };
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
-
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>Your Events</Text>
           <Text style={styles.headerSubtitle}>Promoter Dashboard</Text>
         </View>
+
         <View style={{ flexDirection: "row", gap: 10 }}>
           <TouchableOpacity
             style={[styles.addButton, { backgroundColor: theme.BRAND_RED }]}
-            onPress={() => router.push("/MapScreen")}
+            onPress={() => router.replace("/MapScreen")}
           >
             <Ionicons name="map" size={22} color="#fff" />
           </TouchableOpacity>
-
           <TouchableOpacity
             style={[
               styles.addButton,
@@ -175,6 +217,12 @@ export default function PromoterDashboard() {
               size={24}
               color="#fff"
             />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.addButton, { backgroundColor: "#ffebee" }]}
+            onPress={handleLogout}
+          >
+            <Ionicons name="log-out-outline" size={22} color="#D90429" />
           </TouchableOpacity>
         </View>
       </View>
@@ -200,8 +248,8 @@ export default function PromoterDashboard() {
               borderStyle: "dashed",
               justifyContent: "center",
               alignItems: "center",
-              overflow: "hidden",
               marginBottom: 15,
+              overflow: "hidden",
             }}
             onPress={pickImage}
           >
@@ -222,23 +270,27 @@ export default function PromoterDashboard() {
             )}
           </TouchableOpacity>
 
-          <Text style={styles.label}>
-            Event Title <Text style={styles.required}>*</Text>
-          </Text>
+          <Text style={styles.label}>Event Title *</Text>
           <TextInput
             style={styles.input}
             value={eventTitle}
             onChangeText={setEventTitle}
-            placeholder="Title"
-            placeholderTextColor={isDark ? "#666" : "#AAA"}
+            placeholder="e.g. Arima Sunday Lime"
+            placeholderTextColor="#666"
           />
 
-          <Text style={styles.label}>
-            Start Date <Text style={styles.required}>*</Text>
-          </Text>
+          <Text style={styles.label}>Start Date *</Text>
           <DatePicker
-            selectedDate={startDate}
-            onDateChange={setStartDate}
+            selectedDate={
+              startDate
+                ? new Date(startDate).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })
+                : ""
+            }
+            onDateChange={(date) => setStartDate(date)}
             style={styles.input}
           />
 
@@ -260,11 +312,14 @@ export default function PromoterDashboard() {
           </TouchableOpacity>
 
           {isMultiDay && (
-            <DatePicker
-              selectedDate={endDate}
-              onDateChange={setEndDate}
-              style={styles.input}
-            />
+            <>
+              <Text style={styles.label}>End Date *</Text>
+              <DatePicker
+                selectedDate={endDate}
+                onDateChange={(date) => setEndDate(date.toString())}
+                style={styles.input}
+              />
+            </>
           )}
 
           <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
@@ -286,34 +341,28 @@ export default function PromoterDashboard() {
             </View>
           </View>
 
-          <Text style={styles.label}>
-            Location <Text style={styles.required}>*</Text>
-          </Text>
+          <Text style={styles.label}>Location *</Text>
           <LocationPicker
             selectedLocation={eventLocation}
             onSelectLocation={setEventLocation}
             style={styles.input}
           />
 
-          <Text style={styles.label}>
-            Tags (Min 3) <Text style={styles.required}>*</Text>
-          </Text>
+          <Text style={styles.label}>Tags (Min 3) *</Text>
           <TagSelector
             selectedTags={eventTags}
             onTagsChange={setEventTags}
             minTags={3}
-            style={styles.input}
           />
 
-          <Text style={styles.label}>
-            Description <Text style={styles.required}>*</Text>
-          </Text>
+          <Text style={styles.label}>Description *</Text>
           <TextInput
-            style={[styles.input, styles.descriptionInput]}
+            style={[styles.input, { height: 100 }]}
             multiline
+            placeholder="Describe the vibe..."
             value={eventDescription}
             onChangeText={setEventDescription}
-            placeholderTextColor={isDark ? "#666" : "#AAA"}
+            placeholderTextColor="#666"
           />
 
           <View style={styles.formButtonContainer}>
@@ -329,13 +378,20 @@ export default function PromoterDashboard() {
             <TouchableOpacity
               style={[
                 styles.createBtn,
-                { backgroundColor: theme.BRAND_RED },
-                !isEventFormValid && { opacity: 0.5 },
+                {
+                  backgroundColor: theme.BRAND_RED,
+                  opacity: isEventFormValid ? 1 : 0.5,
+                },
               ]}
               onPress={handleSave}
+              disabled={!isEventFormValid || loading}
             >
               <Text style={styles.createBtnText}>
-                {editingEventId ? "Save Changes" : "Post Event"}
+                {loading
+                  ? "Saving..."
+                  : editingEventId
+                    ? "Save Changes"
+                    : "Post Event"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -345,7 +401,8 @@ export default function PromoterDashboard() {
           style={styles.eventsList}
           showsVerticalScrollIndicator={false}
         >
-          {events.length === 0 ? (
+          {events.filter((e) => Number(e.promoter?.id) === Number(promoterId))
+            .length === 0 ? (
             <View style={styles.emptyState}>
               <Ionicons
                 name="megaphone-outline"
@@ -353,63 +410,60 @@ export default function PromoterDashboard() {
                 color={theme.icon}
               />
               <Text style={[styles.emptyText, { color: theme.text }]}>
-                There's Nothing Here
+                No events yet.
               </Text>
             </View>
           ) : (
-            events.map((event) => (
-              <View
-                key={event.id}
-                style={[
-                  styles.eventCard,
-                  { flexDirection: "row", paddingRight: 5 },
-                ]}
-              >
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.eventCardTitle}>{event.title}</Text>
-                  <Text
-                    style={[
-                      styles.eventCardText,
-                      { color: theme.text, marginTop: 4 },
-                    ]}
-                  >
-                    {event.startDate}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.eventDescription,
-                      { color: theme.text, marginTop: 6 },
-                    ]}
-                    numberOfLines={2}
-                  >
-                    {event.description}
-                  </Text>
-                </View>
-
+            events
+              .filter((e) => Number(e.promoter?.id) === Number(promoterId))
+              .map((event) => (
                 <View
-                  style={{
-                    marginLeft: 10,
-                    borderLeftWidth: 1,
-                    borderLeftColor: isDark ? "#333" : "#F0F0F0",
-                    paddingLeft: 10,
-                    justifyContent: "space-around",
-                  }}
+                  key={event.id}
+                  style={[styles.eventCard, { flexDirection: "row" }]}
                 >
-                  <TouchableOpacity
-                    onPress={() => handleEditPress(event)}
-                    style={{ padding: 12 }}
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.eventCardTitle}>{event.title}</Text>
+                    <Text style={{ color: theme.text, fontSize: 12 }}>
+                      {new Date(event.startDate).toDateString()}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.eventDescription,
+                        { color: theme.text, marginTop: 4 },
+                      ]}
+                      numberOfLines={2}
+                    >
+                      {event.description}
+                    </Text>
+                  </View>
+
+                  <View
+                    style={{
+                      borderLeftWidth: 1,
+                      borderLeftColor: isDark ? "#333" : "#EEE",
+                      paddingLeft: 10,
+                      justifyContent: "space-around",
+                    }}
                   >
-                    <Ionicons name="pencil" size={20} color={theme.text} />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => confirmDelete(event.id, event.title)}
-                    style={{ padding: 12 }}
-                  >
-                    <Ionicons name="trash" size={20} color={theme.BRAND_RED} />
-                  </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => handleEditPress(event)}
+                      style={{ padding: 10 }}
+                    >
+                      <Ionicons name="pencil" size={18} color={theme.text} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => confirmDelete(event.id, event.title)}
+                      style={{ padding: 10 }}
+                    >
+                      <Ionicons
+                        name="trash"
+                        size={18}
+                        color={theme.BRAND_RED}
+                      />
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-            ))
+              ))
           )}
         </ScrollView>
       )}

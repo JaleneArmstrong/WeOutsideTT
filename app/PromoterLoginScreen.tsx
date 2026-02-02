@@ -1,7 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  Alert,
   ImageBackground,
   ScrollView,
   StatusBar,
@@ -13,29 +16,97 @@ import {
   useColorScheme,
 } from "react-native";
 import { Colors } from "../constants/theme";
+import { useAuth } from "../context/AuthContext";
+import { useEvents } from "../context/EventContext";
 import { getStyles } from "../styles/promoterLoginStyles";
 
 const DOODLE_PATTERN =
   "https://www.transparenttextures.com/patterns/skulls.png";
 const BRAND_RED = "#D90429";
 
+const API_URL = ""; // TODO: To Add Render URL
+
 export default function PromoterLoginScreen() {
   const router = useRouter();
+  const { login } = useAuth();
+  const { refreshEvents } = useEvents();
+
   const colorScheme = useColorScheme() ?? "light";
   const theme = Colors[colorScheme];
-
   const styles = getStyles(theme, colorScheme === "light");
 
   const [screen, setScreen] = useState<"home" | "login" | "signup">("home");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [organizerName, setOrganizerName] = useState("");
+  const [company, setCompany] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleAuthAction = () => {
-    router.push({
-      pathname: "/PermissionsScreen",
-      params: { role: "promoter" },
-    });
+  const handleAuthAction = async () => {
+    if (!email || !password || (screen === "signup" && !organizerName)) {
+      Alert.alert("Missing Fields", "Please fill in all required fields.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      if (screen === "login") {
+        const success = await login(email, password);
+
+        if (success) {
+          await refreshEvents();
+          router.replace("/MapScreen");
+        }
+      } else {
+        const response = await fetch(`${API_URL}/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            password,
+            name: organizerName,
+            company,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          await login(email, password);
+          await refreshEvents();
+          const { status: locationStatus } =
+            await Location.getForegroundPermissionsAsync();
+          const { status: mediaStatus } =
+            await ImagePicker.getMediaLibraryPermissionsAsync();
+
+          const allGranted =
+            locationStatus === "granted" && mediaStatus === "granted";
+
+          if (allGranted) {
+            router.replace("/MapScreen");
+          } else {
+            router.replace({
+              pathname: "/PermissionsScreen",
+              params: {
+                role: "promoter",
+                promoterId: data.id,
+              },
+            });
+          }
+        } else {
+          Alert.alert(
+            "Registration Failed",
+            data.error || "Could not create account",
+          );
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Connection Error", "Check your laptop IP.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -89,18 +160,27 @@ export default function PromoterLoginScreen() {
               ) : (
                 <View style={{ width: "100%" }}>
                   {screen === "signup" && (
-                    <TextInput
-                      style={styles.authInput}
-                      placeholder="Organiser Name"
-                      value={organizerName}
-                      onChangeText={setOrganizerName}
-                      placeholderTextColor="#666666"
-                    />
+                    <>
+                      <TextInput
+                        style={styles.authInput}
+                        placeholder="Organiser Name *"
+                        value={organizerName}
+                        onChangeText={setOrganizerName}
+                        placeholderTextColor="#666666"
+                      />
+                      <TextInput
+                        style={styles.authInput}
+                        placeholder="Company Name"
+                        value={company}
+                        onChangeText={setCompany}
+                        placeholderTextColor="#666666"
+                      />
+                    </>
                   )}
 
                   <TextInput
                     style={styles.authInput}
-                    placeholder="Email Address"
+                    placeholder="Email Address *"
                     value={email}
                     onChangeText={setEmail}
                     placeholderTextColor="#666666"
@@ -110,7 +190,7 @@ export default function PromoterLoginScreen() {
 
                   <TextInput
                     style={styles.authInput}
-                    placeholder="Password"
+                    placeholder="Password *"
                     secureTextEntry
                     value={password}
                     onChangeText={setPassword}
@@ -118,36 +198,34 @@ export default function PromoterLoginScreen() {
                   />
 
                   <TouchableOpacity
-                    style={styles.authButton}
+                    style={[styles.authButton, loading && { opacity: 0.7 }]}
                     onPress={handleAuthAction}
+                    disabled={loading}
                   >
                     <Text style={styles.authButtonText}>
-                      {screen === "login" ? "Login" : "Register"}
+                      {loading
+                        ? "Processing..."
+                        : screen === "login"
+                          ? "Login"
+                          : "Register"}
                     </Text>
                   </TouchableOpacity>
-                  {screen === "login" ? (
-                    <TouchableOpacity
-                      onPress={() => setScreen("signup")}
-                      style={styles.switchAuthLink}
-                    >
-                      <Text style={styles.switchAuthText}>
-                        Don’t have an account?{" "}
-                        <Text style={styles.switchAuthEmphasis}>
-                          Create Account
-                        </Text>
+
+                  <TouchableOpacity
+                    onPress={() =>
+                      setScreen(screen === "login" ? "signup" : "login")
+                    }
+                    style={styles.switchAuthLink}
+                  >
+                    <Text style={styles.switchAuthText}>
+                      {screen === "login"
+                        ? "Don't have an account? "
+                        : "Already have an account? "}
+                      <Text style={styles.switchAuthEmphasis}>
+                        {screen === "login" ? "Create Account" : "Login"}
                       </Text>
-                    </TouchableOpacity>
-                  ) : (
-                    <TouchableOpacity
-                      onPress={() => setScreen("login")}
-                      style={styles.switchAuthLink}
-                    >
-                      <Text style={styles.switchAuthText}>
-                        Already have an account?{" "}
-                        <Text style={styles.switchAuthEmphasis}>Login</Text>
-                      </Text>
-                    </TouchableOpacity>
-                  )}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               )}
             </View>

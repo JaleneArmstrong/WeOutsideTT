@@ -1,0 +1,35 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Promoter {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  company   String?
+  events    Event[]
+  createdAt DateTime @default(now())
+}
+
+model Event {
+  id           Int      @id @default(autoincrement())
+  title        String
+  latitude     Float
+  longitude    Float
+  locationName String
+  startDate    DateTime
+  endDate      DateTime?
+  startTime    String?
+  endTime      String?
+  tags         String[]
+  description  String?
+  image        String?
+  createdAt    DateTime @default(now())
+  promoterId   Int
+  promoter     Promoter @relation(fields: [promoterId], references: [id])
+}

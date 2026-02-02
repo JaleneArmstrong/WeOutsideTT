@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 export const EVENT_TAGS = [
   "fete",
@@ -23,12 +23,18 @@ export interface Event {
   image?: string | null;
   startDate: string;
   endDate?: string;
-  location: EventLocation;
+  locationName: string;
+  latitude: number;
+  longitude: number;
   tags: string[];
   description: string;
   startTime?: string;
   endTime?: string;
-  creatorId?: string;
+  promoter?: {
+    id: number;
+    name: string;
+    company?: string;
+  };
 }
 
 interface EventContextType {
@@ -36,12 +42,27 @@ interface EventContextType {
   addEvent: (event: Event) => void;
   deleteEvent: (id: string) => void;
   updateEvent: (id: string, event: Event) => void;
+  refreshEvents: () => Promise<void>;
 }
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
 
 export function EventProvider({ children }: { children: React.ReactNode }) {
   const [events, setEvents] = useState<Event[]>([]);
+
+  const refreshEvents = async () => {
+    try {
+      const response = await fetch("http://192.168.0.19:3000/events");
+      const data = await response.json();
+      setEvents(data);
+    } catch (error) {
+      console.error("Failed to fetch events:", error);
+    }
+  };
+
+  useEffect(() => {
+    refreshEvents();
+  }, []);
 
   const addEvent = (event: Event) => {
     setEvents([...events, event]);
@@ -57,7 +78,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <EventContext.Provider
-      value={{ events, addEvent, deleteEvent, updateEvent }}
+      value={{ events, addEvent, deleteEvent, updateEvent, refreshEvents }}
     >
       {children}
     </EventContext.Provider>

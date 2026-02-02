@@ -271,8 +271,8 @@ export default function MapLayer({
           <Marker
             key={event.id}
             coordinate={{
-              latitude: event.coords.lat,
-              longitude: event.coords.lng,
+              latitude: Number(event.coords.lat),
+              longitude: Number(event.coords.lng),
             }}
             pinColor="#CE1126"
             onPress={() => handlePinPress(event)}

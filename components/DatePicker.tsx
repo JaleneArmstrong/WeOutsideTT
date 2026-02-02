@@ -35,13 +35,11 @@ export function DatePicker({
 
   const handleDateSelect = (day: number) => {
     const date = new Date(year, month, day);
+    date.setHours(12, 0, 0, 0);
+
     if (date >= today) {
-      const formatted = date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
-      onDateChange(formatted);
+      onDateChange(date.toISOString());
+
       setShowPicker(false);
     }
   };

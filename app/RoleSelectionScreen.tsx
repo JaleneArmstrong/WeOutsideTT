@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
@@ -60,12 +61,18 @@ export default function RoleSelectionScreen() {
         <TouchableOpacity
           style={styles.cardContainer}
           activeOpacity={0.9}
-          onPress={() =>
-            router.push({
-              pathname: "/PermissionsScreen",
-              params: { role: "limer" },
-            })
-          }
+          onPress={async () => {
+            const { status } = await Location.getForegroundPermissionsAsync();
+
+            if (status === "granted") {
+              router.replace("/MapScreen");
+            } else {
+              router.push({
+                pathname: "/PermissionsScreen",
+                params: { role: "limer" },
+              });
+            }
+          }}
         >
           <ImageBackground
             source={{ uri: currentImages.limer }}
@@ -87,6 +94,7 @@ export default function RoleSelectionScreen() {
             </View>
           </ImageBackground>
         </TouchableOpacity>
+
         <TouchableOpacity
           style={styles.cardContainer}
           activeOpacity={0.9}
@@ -112,10 +120,6 @@ export default function RoleSelectionScreen() {
             </View>
           </ImageBackground>
         </TouchableOpacity>
-
-        {/* <Text style={styles.footerText}>
-          Unsure? Start as a Limer. You can switch roles later.
-        </Text> */}
       </View>
     </ImageBackground>
   );

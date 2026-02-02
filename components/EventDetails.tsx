@@ -36,6 +36,22 @@ export default function EventDetails({
 }: EventDetailsProps) {
   const styles = getStyles(Colors.light);
 
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "Date TBD";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "Invalid Date";
+
+      return date.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      });
+    } catch (e) {
+      return "Format Error";
+    }
+  };
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
   const busDriveAnim = useRef(new Animated.Value(0)).current;
@@ -80,7 +96,7 @@ export default function EventDetails({
   const onShare = async () => {
     try {
       await Share.share({
-        message: `Check out the vibe at ${event.name} on LimingMap!`,
+        message: `Check out the vibe at ${event.title} on LimingMap!`,
       });
     } catch (error) {
       console.log(error);
@@ -113,26 +129,31 @@ export default function EventDetails({
               <Ionicons name="image-outline" size={40} color="#CCC" />
             </View>
           )}
-          <View style={{ position: "absolute", top: 15, right: 15 }}>
-            <View style={styles.vibeBadge}>
-              <Text style={styles.vibeText}>{event.vibe}</Text>
-            </View>
-          </View>
         </View>
 
         <View style={styles.detailHeader}>
           <View style={styles.titleStack}>
-            <Text style={styles.mainTitle}>{event.name}</Text>
+            <Text style={styles.mainTitle}>
+              {event.title || "Untitled Lime"}
+            </Text>
+
             <View style={styles.metaPillContainer}>
               <View style={styles.metaPill}>
                 <Ionicons name="calendar" size={14} color={BRAND_RED} />
-                <Text style={styles.metaText}>{event.fullDateDisplay}</Text>
+                <Text style={styles.metaText}>
+                  {formatDate(event.startDate)}
+                  {event.startTime ? ` • ${event.startTime}` : ""}
+                  {event.endTime ? ` - ${event.endTime}` : ""}
+                </Text>
               </View>
             </View>
+
             <View style={[styles.metaPillContainer, { marginTop: 8 }]}>
               <View style={styles.metaPill}>
                 <Ionicons name="location" size={14} color={BRAND_RED} />
-                <Text style={styles.metaText}>{event.locationName}</Text>
+                <Text style={styles.metaText}>
+                  {event.locationName || "Location TBD"}
+                </Text>
               </View>
             </View>
           </View>
@@ -167,7 +188,7 @@ export default function EventDetails({
               <Text
                 style={[
                   styles.descriptionLabel,
-                  { color: BRAND_RED, marginBottom: 0 },
+                  { color: BRAND_RED, marginBottom: 0, marginLeft: 10 },
                 ]}
               >
                 Recommended Maxi Route
@@ -199,58 +220,18 @@ export default function EventDetails({
                     <Text style={styles.metaText} numberOfLines={2}>
                       {maxiInfo.route.route}
                     </Text>
-                  </View>
-                </View>
-
-                <View style={{ paddingLeft: 8 }}>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      marginBottom: 8,
-                    }}
-                  >
-                    <Ionicons name="walk" size={16} color="#666" />
-                    <Text style={[styles.descriptionText, { marginLeft: 8 }]}>
-                      Board at:{" "}
-                      <Text style={{ fontWeight: "700" }}>
-                        {maxiInfo.fromStop}
+                    {maxiInfo.toStop === "Port of Spain" && (
+                      <Text
+                        style={{ fontSize: 12, color: "#666", marginTop: 4 }}
+                      >
+                        *Take this to City Gate, then transfer to Yellow Band.
                       </Text>
-                    </Text>
+                    )}
                   </View>
-                  <Text
-                    style={[
-                      styles.metaText,
-                      { marginLeft: 24, marginBottom: 12 },
-                    ]}
-                  >
-                    ({maxiInfo.distanceToStart.toFixed(1)} km from you)
-                  </Text>
-
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      marginBottom: 8,
-                    }}
-                  >
-                    <Ionicons name="flag" size={16} color={BRAND_RED} />
-                    <Text style={[styles.descriptionText, { marginLeft: 8 }]}>
-                      Exit at:{" "}
-                      <Text style={{ fontWeight: "700" }}>
-                        {maxiInfo.toStop}
-                      </Text>
-                    </Text>
-                  </View>
-                  <Text style={[styles.metaText, { marginLeft: 24 }]}>
-                    ({maxiInfo.distanceFromEnd.toFixed(1)} km from event)
-                  </Text>
                 </View>
               </View>
             ) : (
-              <Text style={styles.metaText}>
-                No direct Maxi route found. Consider a local taxi or ride-share.
-              </Text>
+              <Text style={styles.metaText}>No direct Maxi route found.</Text>
             )}
           </Animated.View>
         )}
@@ -270,9 +251,30 @@ export default function EventDetails({
           <Text style={styles.descriptionText}>
             {event.description || "No description available."}
           </Text>
-          {event.creator && (
-            <Text style={[styles.creatorText, { marginTop: 8 }]}>
-              Organized by: {event.creator}
+
+          {event.promoter ? (
+            <View
+              style={{
+                marginTop: 15,
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <Ionicons name="business-outline" size={16} color="#666" />
+              <Text style={[styles.creatorText, { marginLeft: 6 }]}>
+                Hosted by:{" "}
+                <Text style={{ fontWeight: "700" }}>{event.promoter.name}</Text>
+                {event.promoter.company ? ` • ${event.promoter.company}` : ""}
+              </Text>
+            </View>
+          ) : (
+            <Text
+              style={[
+                styles.creatorText,
+                { marginTop: 15, fontStyle: "italic" },
+              ]}
+            >
+              Private Organizer
             </Text>
           )}
         </View>

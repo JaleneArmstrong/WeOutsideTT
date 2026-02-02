@@ -47,7 +47,6 @@ export default function ManageEventsScreen() {
   const [eventDescription, setEventDescription] = useState("");
 
   // UI State
-  // UI State
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
   // ============ VALIDATION HELPERS ============
@@ -63,14 +62,59 @@ export default function ManageEventsScreen() {
     eventLocation &&
     eventTags.length >= 3 &&
     eventDescription.trim() &&
-    (!isMultiDay || endDate) &&
-    (!startTime ||
-      !endTime ||
-      (startTime &&
-        endTime &&
-        timeStringToMinutes(endTime) >= timeStringToMinutes(startTime)));
+    (!isMultiDay || endDate);
 
-  // ============ AUTH HANDLERS ============
+  const validateEventDates = (): boolean => {
+    if (isMultiDay && endDate && startDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (end < start) return false;
+    }
+
+    if (startDate && endDate && startDate === endDate && startTime && endTime) {
+      const startMin = timeStringToMinutes(startTime);
+      const endMin = timeStringToMinutes(endTime);
+      if (!isNaN(startMin) && !isNaN(endMin) && endMin < startMin) return false;
+    }
+
+    return true;
+  };
+
+  const getValidationErrors = (): string[] => {
+    const missing: string[] = [];
+
+    if (!eventTitle.trim()) missing.push("Title");
+    if (!startDate) missing.push("Start date");
+    if (!eventLocation) missing.push("Location");
+
+    if (eventTags.length < 3) {
+      const need = 3 - eventTags.length;
+      missing.push(
+        need > 0
+          ? `Select ${need} more tag${need > 1 ? "s" : ""}`
+          : "Select at least 3 tags"
+      );
+    }
+
+    if (!eventDescription.trim()) missing.push("Description");
+    if (isMultiDay && !endDate) missing.push("End date");
+
+    if (isMultiDay && endDate && startDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (end < start) missing.push("End date cannot be before start date");
+    }
+
+    if (startDate && endDate && startDate === endDate && startTime && endTime) {
+      const startMin = timeStringToMinutes(startTime);
+      const endMin = timeStringToMinutes(endTime);
+      if (!isNaN(startMin) && !isNaN(endMin) && endMin < startMin) {
+        missing.push("End time cannot be before start time");
+      }
+    }
+
+    return missing;
+  };
 
   // ============ AUTH HANDLERS ============
 
@@ -141,28 +185,17 @@ export default function ManageEventsScreen() {
     setShowAddEvent(false);
   };
 
-  const validateEventDates = (): boolean => {
-    if (isMultiDay && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      if (end < start) return false;
-    }
-
-    if (startDate && endDate && startDate === endDate && startTime && endTime) {
-      const startMin = timeStringToMinutes(startTime);
-      const endMin = timeStringToMinutes(endTime);
-      if (!isNaN(startMin) && !isNaN(endMin) && endMin < startMin) return false;
-    }
-
-    return true;
-  };
-
   const handleAddEvent = () => {
     if (!eventTitle || !startDate || !eventLocation || eventTags.length < 3 || !eventDescription) {
       return;
     }
+    
+    if (isMultiDay && !endDate) {
+      return;
+    }
 
     if (!validateEventDates()) {
+      setToastMsg("End date cannot be before start date");
       return;
     }
 
@@ -185,44 +218,6 @@ export default function ManageEventsScreen() {
 
   const handleDeleteEvent = (id: string) => {
     deleteEvent(id);
-  };
-
-  // ============ VALIDATION MESSAGE HELPER ============
-
-  const getValidationErrors = (): string[] => {
-    const missing: string[] = [];
-
-    if (!eventTitle.trim()) missing.push("Title");
-    if (!startDate) missing.push("Start date");
-    if (!eventLocation) missing.push("Location");
-
-    if (eventTags.length < 3) {
-      const need = 3 - eventTags.length;
-      missing.push(
-        need > 0
-          ? `Select ${need} more tag${need > 1 ? "s" : ""}`
-          : "Select at least 3 tags"
-      );
-    }
-
-    if (!eventDescription.trim()) missing.push("Description");
-    if (isMultiDay && !endDate) missing.push("End date");
-
-    if (isMultiDay && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      if (end < start) missing.push("End date cannot be before start date");
-    }
-
-    if (startDate && endDate && startDate === endDate && startTime && endTime) {
-      const startMin = timeStringToMinutes(startTime);
-      const endMin = timeStringToMinutes(endTime);
-      if (!isNaN(startMin) && !isNaN(endMin) && endMin < startMin) {
-        missing.push("End time cannot be before start time");
-      }
-    }
-
-    return missing;
   };
 
   const handleCreateEventClick = () => {

@@ -5,12 +5,12 @@ import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Alert,
-  Animated,
-  Dimensions,
-  PanResponder,
-  TouchableOpacity,
-  View,
+    Alert,
+    Animated,
+    Dimensions,
+    PanResponder,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import MapLayer, { EventType } from "../components/MapLayer";
 import SearchBar from "../components/SearchBar";
@@ -98,13 +98,13 @@ export default function MapScreen() {
       dist: "Nearby",
       vibe: e.tags?.[0]?.toUpperCase() || "LIME",
       coords: {
-        lat: e.location?.latitude || 10.65,
-        lng: e.location?.longitude || -61.5,
+        lat: e.location.latitude,
+        lng: e.location.longitude,
       },
       status: e.startTime ? `Starts ${e.startTime}` : "Open Now",
       description: e.description || "No description provided.",
       fullDateDisplay: dateStr,
-      locationName: e.location?.name || "Trinidad & Tobago",
+      locationName: e.location.name,
       tags: e.tags || [],
       creator: e.creatorId || "Promoter",
       image: e.image,

@@ -2,15 +2,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  ImageBackground,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  useColorScheme,
+    ImageBackground,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+    useColorScheme,
 } from "react-native";
 import { Colors } from "../constants/theme";
 import { getStyles } from "../styles/promoterLoginStyles";
@@ -30,8 +30,40 @@ export default function PromoterLoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [organizerName, setOrganizerName] = useState("");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   const handleAuthAction = () => {
+    setErrorMsg(null);
+
+    if (screen === "login") {
+      if (!email || !password) {
+        setErrorMsg("Please fill in all fields");
+        return;
+      }
+      if (!isValidEmail(email)) {
+        setErrorMsg("Please enter a valid email address");
+        return;
+      }
+    } else if (screen === "signup") {
+      if (!organizerName || !email || !password) {
+        setErrorMsg("Please fill in all fields");
+        return;
+      }
+      if (!isValidEmail(email)) {
+        setErrorMsg("Please enter a valid email address");
+        return;
+      }
+      if (password.length < 6) {
+        setErrorMsg("Password must be at least 6 characters");
+        return;
+      }
+    }
+
     router.push({
       pathname: "/PermissionsScreen",
       params: { role: "promoter" },
@@ -116,6 +148,23 @@ export default function PromoterLoginScreen() {
                     onChangeText={setPassword}
                     placeholderTextColor="#666666"
                   />
+
+                  {errorMsg && (
+                    <View
+                      style={{
+                        backgroundColor: "rgba(255, 59, 48, 0.1)",
+                        padding: 12,
+                        borderRadius: 8,
+                        marginBottom: 12,
+                        borderWidth: 1,
+                        borderColor: "rgba(255, 59, 48, 0.3)",
+                      }}
+                    >
+                      <Text style={{ color: "#ff3b30", textAlign: "center" }}>
+                        {errorMsg}
+                      </Text>
+                    </View>
+                  )}
 
                   <TouchableOpacity
                     style={styles.authButton}

@@ -3,15 +3,15 @@ import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  Alert,
-  Image,
-  ScrollView,
-  StatusBar,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  useColorScheme,
+    Alert,
+    Image,
+    ScrollView,
+    StatusBar,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+    useColorScheme,
 } from "react-native";
 import { DatePicker } from "../components/DatePicker";
 import { LocationPicker } from "../components/LocationPicker";
@@ -114,33 +114,77 @@ export default function PromoterDashboard() {
     ]);
   };
 
-  const handleSave = () => {
-    if (isEventFormValid) {
-      const eventData: Event = {
-        id: editingEventId || Date.now().toString(),
-        title: eventTitle,
-        image: eventImage,
-        startDate,
-        endDate: isMultiDay ? endDate || startDate : startDate,
-        location: eventLocation!,
-        tags: eventTags,
-        description: eventDescription,
-        startTime,
-        endTime,
-        creatorId: "current-promoter",
-      };
+  const getValidationErrors = (): string[] => {
+    const missing: string[] = [];
 
-      if (editingEventId) {
-        updateEvent(editingEventId, eventData);
-        setToastMsg("Event updated!");
-      } else {
-        addEvent(eventData);
-        setToastMsg("Event posted!");
-      }
+    if (!eventTitle.trim()) missing.push("Title");
+    if (!startDate) missing.push("Start date");
+    if (!eventLocation) missing.push("Location");
 
-      setShowAddEvent(false);
-      resetForm();
+    if (eventTags.length < 3) {
+      const need = 3 - eventTags.length;
+      missing.push(
+        need > 0
+          ? `Select ${need} more tag${need > 1 ? "s" : ""}`
+          : "Select at least 3 tags"
+      );
     }
+
+    if (!eventDescription.trim()) missing.push("Description");
+    if (isMultiDay && !endDate) missing.push("End date");
+
+    if (isMultiDay && endDate && startDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (end < start) missing.push("End date cannot be before start date");
+    }
+
+    if (startTime && endTime) {
+      const startMin = timeStringToMinutes(startTime);
+      const endMin = timeStringToMinutes(endTime);
+      if (!isNaN(startMin) && !isNaN(endMin) && endMin < startMin) {
+        missing.push("End time cannot be before start time");
+      }
+    }
+
+    return missing;
+  };
+
+  const handleSave = () => {
+    if (!isEventFormValid) {
+      const errors = getValidationErrors();
+      const msg =
+        errors.length > 0
+          ? `Missing: ${errors.join(", ")}`
+          : "Please complete all required fields";
+      setToastMsg(msg);
+      return;
+    }
+
+    const eventData: Event = {
+      id: editingEventId || Date.now().toString(),
+      title: eventTitle,
+      image: eventImage,
+      startDate,
+      endDate: isMultiDay ? endDate || startDate : startDate,
+      location: eventLocation!,
+      tags: eventTags,
+      description: eventDescription,
+      startTime,
+      endTime,
+      creatorId: "current-promoter",
+    };
+
+    if (editingEventId) {
+      updateEvent(editingEventId, eventData);
+      setToastMsg("Event updated!");
+    } else {
+      addEvent(eventData);
+      setToastMsg("Event posted!");
+    }
+
+    setShowAddEvent(false);
+    resetForm();
   };
 
   return (
@@ -260,11 +304,16 @@ export default function PromoterDashboard() {
           </TouchableOpacity>
 
           {isMultiDay && (
-            <DatePicker
-              selectedDate={endDate}
-              onDateChange={setEndDate}
-              style={styles.input}
-            />
+            <>
+              <Text style={styles.label}>
+                End Date <Text style={styles.required}>*</Text>
+              </Text>
+              <DatePicker
+                selectedDate={endDate}
+                onDateChange={setEndDate}
+                style={styles.input}
+              />
+            </>
           )}
 
           <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>

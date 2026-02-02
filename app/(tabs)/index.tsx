@@ -1,12 +1,20 @@
 import { Ionicons } from "@expo/vector-icons";
-import * as Location from 'expo-location';
+import * as Location from "expo-location";
 import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import MapView, { Callout, Marker, Polyline } from "react-native-maps";
 import { useEvents } from "../../context/EventContext";
 import { findMaxiRouteByProximity } from "../../utils/maxiRoutes";
 import { fetchOSRMRoute } from "../../utils/routeService";
-
 
 const CLEAN_MAP_STYLE = [
   {
@@ -32,8 +40,13 @@ export default function App() {
   const { events } = useEvents();
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
   const [showEventDetails, setShowEventDetails] = useState(false);
-  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [routeCoordinates, setRouteCoordinates] = useState<{ latitude: number; longitude: number }[]>([]);
+  const [userLocation, setUserLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [routeCoordinates, setRouteCoordinates] = useState<
+    { latitude: number; longitude: number }[]
+  >([]);
   const [showRoute, setShowRoute] = useState(false);
   const [loadingRoute, setLoadingRoute] = useState(false);
   const [showTransportOptions, setShowTransportOptions] = useState(false);
@@ -41,12 +54,14 @@ export default function App() {
 
   const selectedEventData = events.find((e) => e.id === selectedEvent);
 
-  // Request location permissions and get user's current location
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Location permission is required to show routes.');
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Denied",
+          "Location permission is required to show routes.",
+        );
         return;
       }
 
@@ -58,10 +73,12 @@ export default function App() {
     })();
   }, []);
 
-  // Fetch route from OpenStreetMap Routing Service (OSRM)
   const fetchRoute = async (eventLat: number, eventLon: number) => {
     if (!userLocation) {
-      Alert.alert('Location Not Available', 'Unable to get your current location.');
+      Alert.alert(
+        "Location Not Available",
+        "Unable to get your current location.",
+      );
       return;
     }
 
@@ -71,13 +88,12 @@ export default function App() {
         userLocation.latitude,
         userLocation.longitude,
         eventLat,
-        eventLon
+        eventLon,
       );
-      
+
       setRouteCoordinates(coordinates);
       setShowRoute(true);
 
-      // Fit map to show entire route
       if (mapRef.current && coordinates.length > 0) {
         mapRef.current.fitToCoordinates(coordinates, {
           edgePadding: { top: 100, right: 50, bottom: 300, left: 50 },
@@ -85,8 +101,8 @@ export default function App() {
         });
       }
     } catch (error) {
-      console.error('Error fetching route:', error);
-      Alert.alert('Route Not Found', 'Unable to find a route to this event.');
+      console.error("Error fetching route:", error);
+      Alert.alert("Route Not Found", "Unable to find a route to this event.");
     } finally {
       setLoadingRoute(false);
     }
@@ -95,7 +111,6 @@ export default function App() {
   const handleMarkerPress = (eventId: string) => {
     setSelectedEvent(eventId);
     setShowEventDetails(true);
-    // Clear previous route when selecting a new event
     setShowRoute(false);
     setRouteCoordinates([]);
   };
@@ -125,7 +140,6 @@ export default function App() {
         }}
         showsUserLocation={true}
       >
-        {/* Event markers */}
         {events.map((event) => (
           <Marker
             key={event.id}
@@ -144,8 +158,12 @@ export default function App() {
               <View style={styles.calloutContent}>
                 <Text style={styles.calloutTitle}>{event.title}</Text>
                 <Text style={styles.calloutSubtext}>
-                  {event.startDate}{event.endDate && event.endDate !== event.startDate ? ` — ${event.endDate}` : ''}
-                  {event.startTime ? ` • ${event.startTime}` : ''}{event.endTime ? ` — ${event.endTime}` : ''}
+                  {event.startDate}
+                  {event.endDate && event.endDate !== event.startDate
+                    ? ` — ${event.endDate}`
+                    : ""}
+                  {event.startTime ? ` • ${event.startTime}` : ""}
+                  {event.endTime ? ` — ${event.endTime}` : ""}
                 </Text>
               </View>
             </Callout>
@@ -163,7 +181,6 @@ export default function App() {
         )}
       </MapView>
 
-      {/* Event details sheet */}
       {showEventDetails && selectedEventData && (
         <View style={styles.detailsSheet}>
           <View style={styles.detailsHeader}>
@@ -177,14 +194,25 @@ export default function App() {
             <View style={styles.detailRow}>
               <Ionicons name="calendar" size={16} color="#007AFF" />
               <Text style={styles.detailText}>
-                {selectedEventData.startDate}{selectedEventData.endDate && selectedEventData.endDate !== selectedEventData.startDate ? ` — ${selectedEventData.endDate}` : ''}
-                {selectedEventData.startTime ? ` • ${selectedEventData.startTime}` : ''}{selectedEventData.endTime ? ` — ${selectedEventData.endTime}` : ''}
+                {selectedEventData.startDate}
+                {selectedEventData.endDate &&
+                selectedEventData.endDate !== selectedEventData.startDate
+                  ? ` — ${selectedEventData.endDate}`
+                  : ""}
+                {selectedEventData.startTime
+                  ? ` • ${selectedEventData.startTime}`
+                  : ""}
+                {selectedEventData.endTime
+                  ? ` — ${selectedEventData.endTime}`
+                  : ""}
               </Text>
             </View>
 
             <View style={styles.detailRow}>
               <Ionicons name="location" size={16} color="#007AFF" />
-              <Text style={styles.detailText}>{selectedEventData.location.name}</Text>
+              <Text style={styles.detailText}>
+                {selectedEventData.location.name}
+              </Text>
             </View>
 
             <View style={styles.tagsRow}>
@@ -199,10 +227,14 @@ export default function App() {
             </View>
 
             <Text style={styles.descriptionLabel}>About this event:</Text>
-            <Text style={styles.description}>{selectedEventData.description}</Text>
+            <Text style={styles.description}>
+              {selectedEventData.description}
+            </Text>
 
             {selectedEventData.creatorId && (
-              <Text style={styles.creatorText}>By: {selectedEventData.creatorId}</Text>
+              <Text style={styles.creatorText}>
+                By: {selectedEventData.creatorId}
+              </Text>
             )}
 
             {/* Local Transport Options button */}
@@ -212,7 +244,7 @@ export default function App() {
                 if (!showTransportOptions) {
                   fetchRoute(
                     selectedEventData.location.latitude,
-                    selectedEventData.location.longitude
+                    selectedEventData.location.longitude,
                   );
                   setShowTransportOptions(true);
                 } else {
@@ -227,13 +259,11 @@ export default function App() {
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
                 <>
-                  <Ionicons
-                    name="bus-outline"
-                    size={20}
-                    color="#fff"
-                  />
+                  <Ionicons name="bus-outline" size={20} color="#fff" />
                   <Text style={styles.transportButtonText}>
-                    {showTransportOptions ? 'Hide Transport Options' : 'Local Transport Options'}
+                    {showTransportOptions
+                      ? "Hide Transport Options"
+                      : "Local Transport Options"}
                   </Text>
                 </>
               )}
@@ -247,11 +277,13 @@ export default function App() {
         <View style={styles.transportSheet}>
           <View style={styles.transportHeader}>
             <Text style={styles.transportTitle}>Local Transport Options</Text>
-            <TouchableOpacity onPress={() => {
-              setShowTransportOptions(false);
-              setShowRoute(false);
-              setRouteCoordinates([]);
-            }}>
+            <TouchableOpacity
+              onPress={() => {
+                setShowTransportOptions(false);
+                setShowRoute(false);
+                setRouteCoordinates([]);
+              }}
+            >
               <Ionicons name="close-circle" size={24} color="#999" />
             </TouchableOpacity>
           </View>
@@ -263,37 +295,72 @@ export default function App() {
                 <Ionicons name="bus" size={24} color="#007AFF" />
                 <Text style={styles.transportOptionTitle}>Maxi Taxi</Text>
               </View>
-              
+
               {(() => {
                 if (!userLocation) {
-                  return <Text style={styles.noRouteText}>Getting your location...</Text>;
+                  return (
+                    <Text style={styles.noRouteText}>
+                      Getting your location...
+                    </Text>
+                  );
                 }
 
                 const maxiInfo = findMaxiRouteByProximity(
                   userLocation.latitude,
                   userLocation.longitude,
                   selectedEventData.location.latitude,
-                  selectedEventData.location.longitude
+                  selectedEventData.location.longitude,
                 );
-                
+
                 if (maxiInfo) {
-                  const { route, fromStop, toStop, distanceToStart, distanceFromEnd } = maxiInfo;
+                  const {
+                    route,
+                    fromStop,
+                    toStop,
+                    distanceToStart,
+                    distanceFromEnd,
+                  } = maxiInfo;
                   return (
                     <View style={styles.maxiRouteContainer}>
                       <View style={styles.maxiBandContainer}>
-                        <View style={[styles.maxiBandTop, { backgroundColor: route.colorCode }]} />
+                        <View
+                          style={[
+                            styles.maxiBandTop,
+                            { backgroundColor: route.colorCode },
+                          ]}
+                        />
                         <View style={styles.maxiBandMiddle} />
-                        <View style={[styles.maxiBandBottom, { backgroundColor: route.colorCode }]} />
+                        <View
+                          style={[
+                            styles.maxiBandBottom,
+                            { backgroundColor: route.colorCode },
+                          ]}
+                        />
                       </View>
                       <View style={styles.maxiRouteInfo}>
-                        <Text style={styles.maxiBandLabel}>{route.color.charAt(0).toUpperCase() + route.color.slice(1)} Band</Text>
+                        <Text style={styles.maxiBandLabel}>
+                          {route.color.charAt(0).toUpperCase() +
+                            route.color.slice(1)}{" "}
+                          Band
+                        </Text>
                         <Text style={styles.maxiRouteText}>{route.route}</Text>
                         <View style={styles.routeDirectionContainer}>
                           <View style={styles.routePoint}>
-                            <Ionicons name="location" size={16} color="#007AFF" />
-                            <Text style={styles.routePointText}>{fromStop}</Text>
+                            <Ionicons
+                              name="location"
+                              size={16}
+                              color="#007AFF"
+                            />
+                            <Text style={styles.routePointText}>
+                              {fromStop}
+                            </Text>
                           </View>
-                          <Ionicons name="arrow-forward" size={16} color="#999" style={styles.routeArrow} />
+                          <Ionicons
+                            name="arrow-forward"
+                            size={16}
+                            color="#999"
+                            style={styles.routeArrow}
+                          />
                           <View style={styles.routePoint}>
                             <Ionicons name="flag" size={16} color="#FF3B30" />
                             <Text style={styles.routePointText}>{toStop}</Text>
@@ -301,17 +368,27 @@ export default function App() {
                         </View>
                         {distanceToStart > 1 && (
                           <View style={styles.distanceNote}>
-                            <Ionicons name="information-circle-outline" size={14} color="#FF9500" />
+                            <Ionicons
+                              name="information-circle-outline"
+                              size={14}
+                              color="#FF9500"
+                            />
                             <Text style={styles.distanceNoteText}>
-                              Get to {fromStop} ({distanceToStart.toFixed(1)} km away) to catch this maxi
+                              Get to {fromStop} ({distanceToStart.toFixed(1)} km
+                              away) to catch this maxi
                             </Text>
                           </View>
                         )}
                         {distanceFromEnd > 1 && (
                           <View style={styles.distanceNote}>
-                            <Ionicons name="information-circle-outline" size={14} color="#FF9500" />
+                            <Ionicons
+                              name="information-circle-outline"
+                              size={14}
+                              color="#FF9500"
+                            />
                             <Text style={styles.distanceNoteText}>
-                              Event is {distanceFromEnd.toFixed(1)} km from {toStop} maxi stop
+                              Event is {distanceFromEnd.toFixed(1)} km from{" "}
+                              {toStop} maxi stop
                             </Text>
                           </View>
                         )}
@@ -321,8 +398,9 @@ export default function App() {
                 } else {
                   return (
                     <Text style={styles.noRouteText}>
-                      No direct maxi route found between your location and the event.
-                      You may need to take multiple maxis or alternative transport.
+                      No direct maxi route found between your location and the
+                      event. You may need to take multiple maxis or alternative
+                      transport.
                     </Text>
                   );
                 }
@@ -330,27 +408,43 @@ export default function App() {
             </View>
 
             {/* Bus Option (Greyed out) */}
-            <View style={[styles.transportOption, styles.transportOptionDisabled]}>
+            <View
+              style={[styles.transportOption, styles.transportOptionDisabled]}
+            >
               <View style={styles.transportOptionHeader}>
                 <Ionicons name="bus-outline" size={24} color="#CCC" />
-                <Text style={[styles.transportOptionTitle, styles.disabledText]}>Bus</Text>
+                <Text
+                  style={[styles.transportOptionTitle, styles.disabledText]}
+                >
+                  Bus
+                </Text>
                 <View style={styles.comingSoonBadge}>
                   <Text style={styles.comingSoonText}>Coming Soon</Text>
                 </View>
               </View>
-              <Text style={styles.disabledText}>Bus routes will be available in a future update.</Text>
+              <Text style={styles.disabledText}>
+                Bus routes will be available in a future update.
+              </Text>
             </View>
 
             {/* Taxi Option (Greyed out) */}
-            <View style={[styles.transportOption, styles.transportOptionDisabled]}>
+            <View
+              style={[styles.transportOption, styles.transportOptionDisabled]}
+            >
               <View style={styles.transportOptionHeader}>
                 <Ionicons name="car-outline" size={24} color="#CCC" />
-                <Text style={[styles.transportOptionTitle, styles.disabledText]}>Taxi</Text>
+                <Text
+                  style={[styles.transportOptionTitle, styles.disabledText]}
+                >
+                  Taxi
+                </Text>
                 <View style={styles.comingSoonBadge}>
                   <Text style={styles.comingSoonText}>Coming Soon</Text>
                 </View>
               </View>
-              <Text style={styles.disabledText}>Taxi services will be available in a future update.</Text>
+              <Text style={styles.disabledText}>
+                Taxi services will be available in a future update.
+              </Text>
             </View>
           </ScrollView>
         </View>
@@ -359,7 +453,9 @@ export default function App() {
       {/* Event count badge */}
       {events.length > 0 && (
         <View style={styles.eventCountBadge}>
-          <Text style={styles.eventCountText}>{events.length} event{events.length !== 1 ? 's' : ''}</Text>
+          <Text style={styles.eventCountText}>
+            {events.length} event{events.length !== 1 ? "s" : ""}
+          </Text>
         </View>
       )}
     </View>

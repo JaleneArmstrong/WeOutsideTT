@@ -24,8 +24,7 @@ const DOODLE_PATTERN =
   "https://www.transparenttextures.com/patterns/skulls.png";
 const BRAND_RED = "#D90429";
 
-// 🚀 PRODUCTION URL
-const API_URL = "https://limingmap-backend.onrender.com";
+const API_URL = ""; // TODO: To Add Render URL
 
 export default function PromoterLoginScreen() {
   const router = useRouter();

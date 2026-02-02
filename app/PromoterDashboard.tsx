@@ -23,8 +23,7 @@ import { useAuth } from "../context/AuthContext";
 import { Event, EventLocation, useEvents } from "../context/EventContext";
 import { getStyles } from "../styles/promoterDashboardStyles";
 
-// 🚀 PRODUCTION URL
-const API_URL = "https://limingmap-backend.onrender.com";
+const API_URL = ""; // TODO: To Add Render URL
 
 export default function PromoterDashboard() {
   const { promoterId } = useLocalSearchParams();

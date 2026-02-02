@@ -65,11 +65,23 @@ export function LocationPicker({
           },
         });
         const json = await res.json();
-        const results = (json || []).map((r: any) => ({
-          name: r.display_name,
-          latitude: parseFloat(r.lat),
-          longitude: parseFloat(r.lon),
-        }));
+
+        const results = (json || []).map((r: any) => {
+          const cleanName =
+            r.address.tourism ||
+            r.address.amenity ||
+            r.address.building ||
+            r.address.road ||
+            r.address.suburb ||
+            r.display_name.split(",")[0];
+
+          return {
+            name: cleanName,
+            latitude: parseFloat(r.lat),
+            longitude: parseFloat(r.lon),
+          };
+        });
+
         setNominatimResults(results);
       } catch {
         setNominatimError("Lookup failed");
@@ -77,7 +89,7 @@ export function LocationPicker({
       } finally {
         setNominatimLoading(false);
       }
-    }, 200);
+    }, 400);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -269,9 +281,9 @@ export function LocationPicker({
                       All Locations (OpenStreetMap)
                     </Text>
                   </View>
-                  {nominatimResults.map((item) => (
+                  {nominatimResults.map((item, index) => (
                     <TouchableOpacity
-                      key={`osm-${item.name}-${item.latitude}-${item.longitude}`}
+                      key={`osm-${index}-${item.latitude}`}
                       style={[
                         styles.suggestionItem,
                         { borderBottomColor: isDark ? "#222" : "#f0f0f0" },

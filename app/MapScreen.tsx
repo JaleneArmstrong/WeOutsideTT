@@ -19,6 +19,7 @@ import MapLayer, { EventType } from "../components/MapLayer";
 import SearchBar from "../components/SearchBar";
 import { Colors } from "../constants/theme";
 import { EVENT_TAGS, useEvents } from "../context/EventContext";
+import { useAuth } from "../context/AuthContext";
 import { EXPANDED_HEIGHT, getStyles } from "../styles/mapStyles";
 import { findMaxiRouteByProximity, MaxiRouteInfo } from "../utils/maxiRoutes";
 import { fetchOSRMRoute } from "../utils/routeService";
@@ -33,6 +34,7 @@ export default function MapScreen() {
   const styles = getStyles(Colors.light);
   const router = useRouter();
   const { events } = useEvents();
+  const { user, logout } = useAuth();
 
   const [selectedEvent, setSelectedEvent] = useState<EventType | undefined>();
   const [showTransportOptions, setShowTransportOptions] = useState(false);
@@ -98,19 +100,24 @@ export default function MapScreen() {
     return {
       id: Number(e.id) || Date.now(),
       name: e.title || "Untitled Lime",
+      coords: {
+        lat: Number(e.latitude) || 10.65,
+        lng: Number(e.longitude) || -61.5,
+      },
+
+      title: e.title,
+      startDate: e.startDate,
+      image: e.image,
+      startTime: e.startTime,
+      endTime: e.endTime,
       dist: "Nearby",
       vibe: e.tags?.[0]?.toUpperCase() || "LIME",
-      coords: {
-        lat: e.location?.latitude || 10.65,
-        lng: e.location?.longitude || -61.5,
-      },
       status: e.startTime ? `Starts ${e.startTime}` : "Open Now",
       description: e.description || "No description provided.",
       fullDateDisplay: dateStr,
-      locationName: e.location?.name || "Trinidad & Tobago",
+      locationName: e.locationName || "Trinidad & Tobago",
       tags: e.tags || [],
-      creator: e.creatorId || "Promoter",
-      image: e.image,
+      promoter: e.promoter,
     };
   });
 
@@ -228,13 +235,13 @@ export default function MapScreen() {
       );
       setRoutePath(path);
     } catch (error) {
+      console.error("Route Error:", error);
       Alert.alert(
         "Route Error",
         "Could not calculate path. Check your data connection.",
       );
     }
   };
-
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -266,6 +273,7 @@ export default function MapScreen() {
 
       <MapLayer
         events={filteredEvents}
+        key={`map-render-key-${events.length}`}
         selectedEvent={selectedEvent}
         routePath={routePath}
         onMapPress={() => {
@@ -384,10 +392,28 @@ export default function MapScreen() {
             alignItems: "center",
             borderWidth: 1.2,
             borderColor: BRAND_RED,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.2,
+            shadowRadius: 4,
+            elevation: 5,
           }}
-          onPress={() => router.push("/PromoterDashboard")}
+          onPress={() => {
+            if (user && user.id) {
+              router.replace({
+                pathname: "/PromoterDashboard",
+                params: { promoterId: user.id },
+              });
+            } else {
+              router.replace("/PromoterLoginScreen");
+            }
+          }}
         >
-          <Ionicons name="megaphone" size={20} color={BRAND_RED} />
+          <Ionicons
+            name={user && user.id ? "megaphone" : "key-outline"}
+            size={24}
+            color={BRAND_RED}
+          />
         </TouchableOpacity>
       </View>
 

@@ -1,50 +1,59 @@
-# Welcome to your Expo app 👋
+# WeOutside TT
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**Date:** February 2, 2026  
+**Group:** Code & Calypso  
+**Platform:** Android (Optimized & Tested)  
 
-## Get started
+---
 
-1. Install dependencies
+## 1. Executive Summary
 
-   ```bash
-   npm install
-   ```
+WeOutside TT is a geography-first event discovery application designed to solve the problem of fragmented information in Trinidad and Tobago’s event landscape. While current social media platforms offer text-based lists, WeOutside TT provides an interactive map that visualizes "limes," cultural festivals, and nature spots across the entire country.
 
-2. Start the app
+---
 
-   ```bash
-   npx expo start
-   ```
+## 2. The Problem
 
-In the output, you'll find options to open the app in a
+In Trinidad and Tobago, finding things to do often requires being part of specific social media circles or WhatsApp groups. There is no centralized platform that allows a user to see what is happening nearby in real-time. This leads to low visibility for niche cultural events and local businesses outside of the main urban hubs.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+---
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 3. The Solution
 
-## Get a fresh project
+The app centers the user on a high-performance map of the islands. By categorizing events into culturally relevant tags, users can filter their surroundings to find exactly what they are looking for.
 
-When you're ready, run:
+**Key Features:**
 
-```bash
-npm run reset-project
-```
+- **Geographic Visualization:** Pins are scattered nationwide, covering areas from the Icacos peninsula to the Toco lighthouse.  
+- **Local Taxonomy:** Event tagging is tailored to Trinidadian culture rather than generic international categories.  
+- **Cloud Synchronization:** Powered by a live Supabase backend for instant data retrieval.  
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+---
 
-## Learn more
+## 4. Technical Stack
 
-To learn more about developing your project with Expo, look at the following resources:
+- **Frontend:** React Native (Expo) - Built and tested on Android.  
+- **Backend & Database:** Supabase (PostgreSQL) using JSONB for dynamic event tagging.  
+- **ORM:** Prisma (Schema definition and data management).  
+- **Maps:** Integrated Google Maps API via react-native-maps.  
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+---
 
-## Join the community
+## 5. How to Run and Interact with the Solution
 
-Join our community of developers creating universal apps.
+### A. Using Expo Go (Recommended for Judges)
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Download the Expo Go app from the Google Play Store on an Android device. Open the app and scan this QR code:
+![QR Code](app-qr.svg)
+
+**Note:** Ensure location permissions are granted to see your position on the map relative to the events.
+
+### B. Interacting with the Map
+
+- **Zooming/Panning:** Move across the islands to see pins in various villages and towns.  
+- **Event Details:** Tap any pin to see the event title, a brief description of the "vibe," the specific tags, and an associated image.  
+- **Filtering:** Use the category selector to narrow down events by your interest.  
+
+---
+
+*Made with ❤️ for TRINBAGO TECH HACKATHON & IDEATHON 2026 and by Code & Calypso*

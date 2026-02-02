@@ -23,7 +23,7 @@ import { useAuth } from "../context/AuthContext";
 import { Event, EventLocation, useEvents } from "../context/EventContext";
 import { getStyles } from "../styles/promoterDashboardStyles";
 
-const API_URL = ""; // TODO: To Add Render URL
+const API_URL = "https://weoutside-backend.onrender.com";
 
 export default function PromoterDashboard() {
   const { promoterId } = useLocalSearchParams();

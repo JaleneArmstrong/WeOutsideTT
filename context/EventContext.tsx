@@ -45,6 +45,8 @@ interface EventContextType {
   refreshEvents: () => Promise<void>;
 }
 
+const API_URL = "https://weoutside-backend.onrender.com";
+
 const EventContext = createContext<EventContextType | undefined>(undefined);
 
 export function EventProvider({ children }: { children: React.ReactNode }) {
@@ -52,7 +54,9 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
 
   const refreshEvents = async () => {
     try {
-      const response = await fetch("http://192.168.0.19:3000/events");
+      const response = await fetch(
+        "https://weoutside-backend.onrender.com/events",
+      );
       const data = await response.json();
       setEvents(data);
     } catch (error) {

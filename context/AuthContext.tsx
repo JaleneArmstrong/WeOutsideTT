@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Alert } from "react-native";
 
-const API_URL = ""; // TODO: To Add Render URL
+const API_URL = "https://weoutside-backend.onrender.com";
 
 interface User {
   id: number;
@@ -42,8 +42,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, pass: string) => {
     try {
-      console.log("Attempting login to:", `${API_URL}/login`);
-
       const response = await fetch(`${API_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

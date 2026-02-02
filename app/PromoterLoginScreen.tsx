@@ -24,7 +24,7 @@ const DOODLE_PATTERN =
   "https://www.transparenttextures.com/patterns/skulls.png";
 const BRAND_RED = "#D90429";
 
-const API_URL = ""; // TODO: To Add Render URL
+const API_URL = "https://weoutside-backend.onrender.com";
 
 export default function PromoterLoginScreen() {
   const router = useRouter();

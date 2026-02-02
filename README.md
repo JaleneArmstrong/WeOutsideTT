@@ -44,6 +44,7 @@ The app centers the user on a high-performance map of the islands. By categorizi
 ### A. Using Expo Go (Recommended for Judges)
 
 Download the Expo Go app from the Google Play Store on an Android device. Open the app and scan this QR code:
+
 ![QR Code](app-qr.svg)
 
 **Note:** Ensure location permissions are granted to see your position on the map relative to the events.

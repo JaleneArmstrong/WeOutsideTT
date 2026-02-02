@@ -8,14 +8,17 @@ import {
   Alert,
   Animated,
   Dimensions,
+  Keyboard,
   PanResponder,
+  ScrollView,
+  Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import MapLayer, { EventType } from "../components/MapLayer";
 import SearchBar from "../components/SearchBar";
 import { Colors } from "../constants/theme";
-import { useEvents } from "../context/EventContext";
+import { EVENT_TAGS, useEvents } from "../context/EventContext";
 import { EXPANDED_HEIGHT, getStyles } from "../styles/mapStyles";
 import { findMaxiRouteByProximity, MaxiRouteInfo } from "../utils/maxiRoutes";
 import { fetchOSRMRoute } from "../utils/routeService";
@@ -111,6 +114,68 @@ export default function MapScreen() {
     };
   });
 
+  const [searchText, setSearchText] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [searchExpanded, setSearchExpanded] = useState(false);
+  const searchRef = useRef<any>(null);
+
+  const toggleTag = (tag: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
+    );
+  };
+
+  const filteredEvents = mapEvents.filter((e) => {
+    const q = searchText.trim().toLowerCase();
+    const matchesSearch = !q
+      ? true
+      : e.name.toLowerCase().includes(q) ||
+        (e.tags || []).some((t) => t.toLowerCase().includes(q)) ||
+        (e.description || "").toLowerCase().includes(q) ||
+        (e.locationName || "").toLowerCase().includes(q);
+
+    const matchesTags =
+      selectedTags.length === 0 ||
+      (e.tags || []).some((t) =>
+        selectedTags.some((st) => st.toLowerCase() === t.toLowerCase()),
+      );
+
+    return matchesSearch && matchesTags;
+  });
+
+  // When search expands, ensure keyboard shows and suggestions/filters are visible
+  const handleFocusSearch = () => {
+    setSelectedEvent(undefined);
+    animateTo(COLLAPSED_HEIGHT);
+    setSearchExpanded(true);
+  };
+
+  const handleCancelSearch = () => {
+    setSearchText("");
+    setSelectedEvent(undefined);
+    animateTo(COLLAPSED_HEIGHT);
+    setSearchExpanded(false);
+  };
+
+  const handleSearchSubmit = (text: string) => {
+    const q = text.trim().toLowerCase();
+    if (!q) return;
+    const match = filteredEvents.find(
+      (ev) =>
+        ev.name.toLowerCase().includes(q) ||
+        (ev.tags || []).some((t) => t.toLowerCase().includes(q)) ||
+        (ev.description || "").toLowerCase().includes(q) ||
+        (ev.locationName || "").toLowerCase().includes(q),
+    );
+
+    if (match) {
+      setSelectedEvent(match);
+      setShowTransportOptions(false);
+      setRoutePath([]);
+      animateTo(EXPANDED_HEIGHT);
+    }
+  };
+
   useEffect(() => {
     const listener = slideAnim.addListener(({ value }) => {
       slideValueRef.current = value;
@@ -200,7 +265,7 @@ export default function MapScreen() {
       <StatusBar style="dark" />
 
       <MapLayer
-        events={mapEvents}
+        events={filteredEvents}
         selectedEvent={selectedEvent}
         routePath={routePath}
         onMapPress={() => {
@@ -223,38 +288,200 @@ export default function MapScreen() {
           {
             flexDirection: "row",
             alignItems: "center",
+            justifyContent: "center",
             gap: 8,
             position: "absolute",
             top: 60,
-            paddingHorizontal: 10,
+            left: 0,
+            right: 0,
           },
         ]}
       >
-        <View style={{ width: "75%" }}>
+        <View style={{ width: "80%", alignSelf: "center" }}>
           <SearchBar
+            ref={searchRef}
+            value={searchText}
+            onChangeText={setSearchText}
+            onSubmit={handleSearchSubmit}
             isExpanded={false}
-            onFocus={() => {
-              setSelectedEvent(undefined);
-              animateTo(COLLAPSED_HEIGHT);
-            }}
+            showCancel={false}
+            onFocus={handleFocusSearch}
+            onCancel={handleCancelSearch}
           />
+
+          {searchText.trim() !== "" && !searchExpanded && (
+            <View style={styles.searchSuggestions}>
+              {filteredEvents.length === 0 ? (
+                <View style={styles.suggestionItem}>
+                  <Text style={styles.suggestionTitle}>No results</Text>
+                </View>
+              ) : (
+                filteredEvents.slice(0, 5).map((ev) => (
+                  <TouchableOpacity
+                    key={ev.id}
+                    style={styles.suggestionItem}
+                    onPress={() => {
+                      Keyboard.dismiss();
+                      searchRef.current?.blur();
+                      setSearchText("");
+                      setSelectedEvent(ev);
+                      setShowTransportOptions(false);
+                      setRoutePath([]);
+                      setSearchExpanded(false);
+                      animateTo(EXPANDED_HEIGHT);
+                    }}
+                  >
+                    <Text style={styles.suggestionTitle} numberOfLines={1}>
+                      {ev.name}
+                    </Text>
+                    <Text style={styles.suggestionSubtitle} numberOfLines={1}>
+                      {ev.locationName}
+                    </Text>
+                  </TouchableOpacity>
+                ))
+              )}
+
+              {/* Tag filter chips */}
+              <View style={{ marginTop: 8 }}>
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                  {EVENT_TAGS.map((tag) => {
+                    const active = selectedTags.includes(tag);
+                    return (
+                      <TouchableOpacity
+                        key={tag}
+                        onPress={() => toggleTag(tag)}
+                        style={[
+                          styles.tagFilterChip,
+                          active && styles.tagFilterChipActive,
+                        ]}
+                      >
+                        <Text
+                          style={
+                            active
+                              ? styles.tagFilterChipTextActive
+                              : styles.tagFilterChipText
+                          }
+                        >
+                          {tag}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            </View>
+          )}
         </View>
         <TouchableOpacity
           style={{
+            position: "absolute",
+            right: 16,
             backgroundColor: "#FFF",
-            width: 48,
-            height: 48,
-            borderRadius: 12,
+            width: 40,
+            height: 40,
+            borderRadius: 10,
             justifyContent: "center",
             alignItems: "center",
-            borderWidth: 1.5,
+            borderWidth: 1.2,
             borderColor: BRAND_RED,
           }}
           onPress={() => router.push("/PromoterDashboard")}
         >
-          <Ionicons name="megaphone" size={22} color={BRAND_RED} />
+          <Ionicons name="megaphone" size={20} color={BRAND_RED} />
         </TouchableOpacity>
       </View>
+
+      {/* Expanded search overlay */}
+      {searchExpanded && (
+        <View style={styles.searchOverlay} pointerEvents="box-none">
+          <View style={{ padding: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <View>
+              <Text style={{ fontSize: 18, fontWeight: "700" }}>Search Results</Text>
+              {searchText.trim() !== "" && (
+                <Text style={styles.searchQueryText} numberOfLines={1}>
+                  Results for: "{searchText.trim()}"
+                </Text>
+              )}
+            </View>
+            <TouchableOpacity onPress={handleCancelSearch} style={{ padding: 8 }}>
+              <Text style={{ color: "#D90429", fontWeight: "700" }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.searchOverlayInner}>
+            <ScrollView style={styles.searchResults}>
+              {filteredEvents.length === 0 ? (
+                <View style={styles.suggestionItem}>
+                  <Text style={styles.suggestionTitle}>No results</Text>
+                </View>
+              ) : (
+                filteredEvents.map((ev) => (
+                  <TouchableOpacity
+                    key={ev.id}
+                    style={styles.suggestionItem}
+                    onPress={() => {
+                      Keyboard.dismiss();
+                      searchRef.current?.blur();
+                      setSearchText("");
+                      setSelectedEvent(ev);
+                      setShowTransportOptions(false);
+                      setRoutePath([]);
+                      setSearchExpanded(false);
+                      animateTo(EXPANDED_HEIGHT);
+                    }}
+                  >
+                    <Text style={styles.suggestionTitle}>{ev.name}</Text>
+                    <Text style={styles.suggestionSubtitle}>{ev.locationName}</Text>
+                    <Text style={{ marginTop: 6, fontSize: 12, color: "#666" }}>
+                      {ev.tags?.slice(0, 3).join(" • ")}
+                    </Text>
+                  </TouchableOpacity>
+                ))
+              )}
+            </ScrollView>
+
+            <View style={styles.filtersPanel}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 12 }}>
+                <Text style={styles.sectionTitle}>Filters</Text>
+                <TouchableOpacity
+                  onPress={() => setSelectedTags([])}
+                  style={{ padding: 8 }}
+                >
+                  <Text style={{ color: "#D90429", fontWeight: "700" }}>Clear</Text>
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView contentContainerStyle={{ padding: 12 }}>
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                  {EVENT_TAGS.map((tag) => {
+                    const active = selectedTags.includes(tag);
+                    return (
+                      <TouchableOpacity
+                        key={tag}
+                        onPress={() => toggleTag(tag)}
+                        style={[
+                          styles.tagFilterChip,
+                          active && styles.tagFilterChipActive,
+                        ]}
+                      >
+                        <Text
+                          style={
+                            active
+                              ? styles.tagFilterChipTextActive
+                              : styles.tagFilterChipText
+                          }
+                        >
+                          {tag}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </ScrollView>
+            </View>
+          </View>
+        </View>
+      )}
 
       <Animated.View
         style={[styles.overlayContainer, { height: slideAnim, zIndex: 101 }]}
